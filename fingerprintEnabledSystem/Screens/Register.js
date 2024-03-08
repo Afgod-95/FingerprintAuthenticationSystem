@@ -23,8 +23,7 @@ const Register = () => {
     level: '',
     enrollmentYear: '',
     email: '',
-    phoneNumber: '',
-    hasFingerprintData: false,
+    phoneNumber: ''
   });
 
   const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
@@ -76,56 +75,63 @@ const Register = () => {
   };
 
   // Data submission
-const submitData = async () => {
-  try {
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
-    if (!hasHardware) {
-      Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-      return;
-    }
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-    if (!isEnrolled) {
-      Alert.alert('Error', 'No fingerprint enrolled on this device.');
-      return;
-    }
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Authenticate with your fingerprint',
-    });
-
-    if (result.success) {
-      //register user using his fingerprint data
-      const userData = {
-        ...user,
-        dateOfBirth: user.dateOfBirth,
-      };
-      console.log("User Data to be registered : ", userData);
-      const response = await axios.post(backendURL, userData);
-      if (response.status === 200) {
-        Alert.alert('Message', response.data.message);
-        setUser({ ...user, hasFingerprintData: true });
-        const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
-        await AsyncStorage.setItem('profile', user.profile);
-        await AsyncStorage.setItem('name', user.name);
-        await AsyncStorage.setItem('dateOfBirth', DOB);
-        await AsyncStorage.setItem('studentID', user.studentID);
-        await AsyncStorage.setItem('email', user.email);
-        await AsyncStorage.setItem('phoneNumber', user.phoneNumber);
-        await AsyncStorage.setItem('department', user.department);
-        await AsyncStorage.setItem('faculty', user.faculty);
-        await AsyncStorage.setItem('program', user.program);
-        await AsyncStorage.setItem('level', user.level);
-        await AsyncStorage.setItem('enrollmentYear', user.enrollmentYear);
-        navigate.navigate('Home');
-      } else {
-        Alert.alert('Error', response.data.error);
+  const submitData = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      if (!hasHardware) {
+        Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
+        return;
       }
-    } else {
-      Alert.alert('Error', 'Fingerprint authentication failed');
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!isEnrolled) {
+        Alert.alert('Error', 'No fingerprint enrolled on this device.');
+        return;
+      }
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate with your fingerprint',
+      });
+  
+      console.log('Fingerprint result:', JSON.stringify(result)); // Log fingerprint result as plain text
+  
+      if (result.success) {
+        // Register user using his fingerprint data
+        const userData = { 
+          fingerprint: result.success,
+          ...user
+        };
+        console.log(`Fingerprint: ${result.success}`);
+        console.log("User Data to be registered: ", userData);
+        const response = await axios.post(backendURL, userData);
+        if (response.status === 200) {
+          const { token } = response.data;
+          console.log(token)
+          Alert.alert('Message', response.data.message);
+          setUser({ ...user, hasFingerprintData: true });
+          const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
+          await AsyncStorage.setItem('profile', user.profile);
+          await AsyncStorage.setItem('name', user.name);
+          await AsyncStorage.setItem('dateOfBirth', DOB);
+          await AsyncStorage.setItem('studentID', user.studentID);
+          await AsyncStorage.setItem('email', user.email);
+          await AsyncStorage.setItem('phoneNumber', user.phoneNumber);
+          await AsyncStorage.setItem('department', user.department);
+          await AsyncStorage.setItem('faculty', user.faculty);
+          await AsyncStorage.setItem('program', user.program);
+          await AsyncStorage.setItem('level', user.level);
+          await AsyncStorage.setItem('enrollmentYear', user.enrollmentYear);
+          await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
+          navigate.navigate('Home');
+        } else {
+          Alert.alert('Error', response.data.error);
+        }
+      } else {
+        Alert.alert('Error', 'Fingerprint authentication failed');
+      }
+    } catch (error) {
+      console.error('Error during fingerprint authentication:', error);
     }
-  } catch (error) {
-    console.error('Error during fingerprint authentication:', error);
-  }
-};
+  };
+  
 
 const handleNext = () => {
   if (currentStep < totalSteps) {

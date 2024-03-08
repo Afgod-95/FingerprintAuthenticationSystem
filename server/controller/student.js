@@ -35,7 +35,6 @@ const fingerprintController = {
             return res.status(400).json({
             error: 'All fields are required',
             });
-            console.log('All fields are required')
           }
 
           
@@ -44,14 +43,12 @@ const fingerprintController = {
             return res.status(400).json({
             error: 'Invalid email format',
             });
-            console.log('Invalid email format')
           }
   
           if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
               return res.status(400).json({
               error: 'Invalid mobile number',
               });
-              console.log('Invalid mobile number')
           }
   
           const exist = await studentData.findOne({ email });
@@ -59,7 +56,6 @@ const fingerprintController = {
               return res.status(400).json({
               error: 'Email and phone number already exist',
               });
-              console.log('Email and phone number already exist')
           }
   
           // Hash the fingerprint data before saving
@@ -70,7 +66,7 @@ const fingerprintController = {
             return res.status(400).json({
               error: 'Fingerprint already exists',
             });
-            console.log('Fingerprint already exists')
+           
           }
   
           // Save user registration details
@@ -107,23 +103,22 @@ const fingerprintController = {
     },
       //registration endPoint
 
-    login: async (req, res) => {
+      login: async (req, res) => {
         try {
           const { fingerPrintData } = req.body;
           if (!fingerPrintData) {
             return res.status(400).json({
               error: 'Fingerprint required',
             });
-            console.log( 'Fingerprint required')
           }
     
           // Hash the provided fingerprint data
           const hashedFingerprint = crypto.createHash('sha256').update(fingerPrintData).digest('hex');
     
-          const exist = studentData.findOne({ fingerprint: hashedFingerprint });
-          if (!exist || exist.fingerPrintData === false) {
+          const exist = await studentData.findOne({ fingerprint: hashedFingerprint });
+          if (!exist || exist.fingerprint !== hashedFingerprint) {
             return res.status(400).json({
-              error: 'There was an error processing your request',
+              error: 'Invalid fingerprint',
             });
           }
     
@@ -136,7 +131,7 @@ const fingerprintController = {
             error: 'Internal Server Error',
           });
         }
-    },
+    },    
 };
 
 module.exports = fingerprintController;
