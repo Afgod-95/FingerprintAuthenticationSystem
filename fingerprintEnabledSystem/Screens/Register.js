@@ -10,12 +10,14 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import axios from 'axios'
+import { NetInfo } from 'react-native-community/netinfo'
 
 const Register = () => {
   const [user, setUser] = useState({
     profile: '',
     name: '',
     dateOfBirth: '',
+    gender: '',
     studentID: '',
     department: '',
     faculty: '',
@@ -24,7 +26,6 @@ const Register = () => {
     enrollmentYear: '',
     email: '',
     phoneNumber: '',
-    hasFingerprintData: false,
   });
 
   const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
@@ -75,70 +76,68 @@ const Register = () => {
     }
   };
 
-  // Data submission
-  const handleNext = async () => {
-    try {
-      if (currentStep < totalSteps) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        const hasHardware = await LocalAuthentication.hasHardwareAsync();
-        if (!hasHardware) {
-          Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-          return;
-        }
-        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-        if (!isEnrolled) {
-          Alert.alert('Error', 'No fingerprint enrolled on this device.');
-          return;
-        }
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: 'Authenticate with your fingerprint',
-        });
+  if (!user.name || !user.dateOfBirth || !user.studentID || !user.email || !user.phoneNumber || !user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
+    Alert.alert('Error', 'Please fill in all required fields.');
+    return;
+  }
 
-        if (result.success) {
-          //register user using his fingerprint data
-          const userData = {
-            ...user,
-            dateOfBirth: selectedDate,
-          };
-          console.log("User Data to be registered : ",userData);
-          const registerNewUser = async () => {
-            try {
-              const response = await axios.post(backendURL, userData);
-              if (response.status === 200) {
-                Alert.alert('Message', response.data.message);
-                setUser({ ...user, hasFingerprintData: true });
-                const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
-                await AsyncStorage.setItem('profile', user.profile);
-                await AsyncStorage.setItem('name', user.name);
-                await AsyncStorage.setItem('dateOfBirth', DOB);
-                await AsyncStorage.setItem('studentID', user.studentID);
-                await AsyncStorage.setItem('email', user.email);
-                await AsyncStorage.setItem('phoneNumber', user.phoneNumber);
-                await AsyncStorage.setItem('department', user.department);
-                await AsyncStorage.setItem('faculty', user.faculty);
-                await AsyncStorage.setItem('program', user.program);
-                await AsyncStorage.setItem('level', user.level);
-                await AsyncStorage.setItem('enrollmentYear', user.enrollmentYear);
-                navigate.navigate('Home');
-              } else {
-                Alert.alert('Error', response.data.error);
-              }
-            } catch (error) {
-              console.error('Error during user registration:', error);
-              Alert.alert('Error', 'An error occurred while registering the user.');
-            }
-          };
-          
-          // Checking internet connection before
-          registerNewUser()
-        } else {
-          Alert.alert('Error', 'Fingerprint authentication failed');
+  async function registerNewUser() {
+    try {
+      const userDetails = {
+        profilePic: user.profile,
+        name: user.name,
+        gender: user.gender,
+        dateOfBirth: user.dateOfBirth.toISOString(), // Convert date to ISO string
+        studentID: user.studentID,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        department: user.department,
+        faculty: user.faculty,
+        program: user.program,
+        level: user.level,
+        yearOfEnrollment: user.enrollmentYear,
+      };
+  
+      // Integrate fingerprint authentication:
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      if (hasHardware) {
+        const enrolled = await LocalAuthentication.isEnrolledAsync();
+        if (enrolled) {
+          const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Authenticate with your fingerprint',
+          });
+          if (result.success) {
+            userDetails.fingerPrint = result.biometryType; // Store fingerprint type
+          }
         }
       }
+  
+      const response = await axios.post(backendURL, userDetails);
+  
+      if (response.data.status === 200) {
+        Alert.alert(response.data.message);
+        console.log(response.data.message);
+        await AsyncStorage.setItem('user', JSON.stringify(userDetails)); // Store user data
+        navigate.navigate('Home');
+      } else if (response.data.error) {
+        // Handle error from backend
+        Alert.alert('Registration Error', response.data.error);
+      }
     } catch (error) {
-      console.error('Error during fingerprint authentication:', error);
+      // Handle general errors
+      console.error(error);
+      Alert.alert('Registration Error', 'An error occurred. Please try again.');
     }
+  }
+  
+  
+  
+  // Data submission
+  const handleNext = async () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    } 
+    registerNewUser()
   };
 
   //Bottom sheet
@@ -231,7 +230,6 @@ const Register = () => {
                     mode='date'
                     onConfirm={handleConfirm}
                     onCancel={hideDatePicker}
-                  
                   />
                   )}
                 </View>

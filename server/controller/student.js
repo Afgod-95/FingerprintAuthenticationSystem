@@ -117,7 +117,7 @@ const fingerprintController = {
           const exist = studentData.findOne({ fingerprint: hashedFingerprint });
           if (!exist || exist.fingerPrintData === false) {
             return res.status(400).json({
-              error: 'Fingerprint not recognized',
+              error: 'There was an error processing your request',
             });
           }
     
