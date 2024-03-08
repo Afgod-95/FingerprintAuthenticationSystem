@@ -11,13 +11,13 @@ const PORT = 5031
 //middlewares 
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
-app.use((cors))
+app.use(cors())
 
 //routes or path
 console.log('Router loaded:', router); // Add this line
+console.log('Routes added:', app.routes); // Add this line
 
 app.use(router);
-console.log('Routes added:', app.routes); // Add this line
 
 //database connection
 mongoose.connect(process.env.MONGODB_URI).then(() => {
