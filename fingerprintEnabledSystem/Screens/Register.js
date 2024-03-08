@@ -96,7 +96,7 @@ const Register = () => {
       if (result.success) {
         // Register user using his fingerprint data
         const userData = { 
-          fingerprint: result.success,
+          fingerprintSuccess: result.success,
           ...user
         };
         console.log(`Fingerprint: ${result.success}`);
@@ -104,7 +104,7 @@ const Register = () => {
         const response = await axios.post(backendURL, userData);
         if (response.status === 200) {
           const { token } = response.data;
-          console.log(token)
+          console.log(`token: ${token}`)
           Alert.alert('Message', response.data.message);
           setUser({ ...user, hasFingerprintData: true });
           const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
@@ -129,18 +129,68 @@ const Register = () => {
       }
     } catch (error) {
       console.error('Error during fingerprint authentication:', error);
+      Alert.alert('Error', error.message)
     }
   };
   
 
-const handleNext = () => {
-  if (currentStep < totalSteps) {
-    setCurrentStep(currentStep + 1);
-  } else {
-    submitData(); // Trigger data submission when all steps are completed
-  }
-};
+  const handleNext = () => {
+    if (!isStepValid(currentStep)) {
+      Alert.alert('Error', 'Please fill in all required fields.');
+      return;
+    }
+  
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    } 
+    else {
+      submitData(); // Trigger data submission when all steps are completed
+    }
+  };
+  
 
+  const isStepValid = (step) => {
+    switch (step) {
+      case 1:
+        return !!user.profile;
+      case 2:
+        if (!user.name || !user.dateOfBirth || !user.studentID) {
+          Alert.alert('Error', 'Please fill in all required fields.');
+          return false;
+        }
+        return true;
+      case 3:
+        if (!user.email || !user.phoneNumber) {
+          Alert.alert('Error', 'Please fill in all required fields.');
+          return false;
+        }
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isValidEmail = emailRegex.test(user.email);
+        if (!isValidEmail) {
+          Alert.alert('Error', 'Invalid email format');
+          return false;
+        }
+        // Phone number validation (assuming 10-digit numbers)
+        const phoneRegex = /^[0-9]{10}$/;
+        const isValidPhone = phoneRegex.test(user.phoneNumber);
+        if (!isValidPhone) {
+          Alert.alert('Error', 'Invalid phone number format (10 digits expected)');
+          return false;
+        }
+        return true;
+      case 4:
+        if (!user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
+          Alert.alert('Error', 'Please fill in all required fields.');
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+  
+  
   //Bottom sheet
   const bottomSheetRef = useRef(true)
   const handleDepartmentSelect = (department) => {
@@ -333,10 +383,14 @@ const handleNext = () => {
         <View style={{ margin: 5, flexDirection: 'row', alignItems: 'center', gap: 25 }}>
           {steps.map((step) => (
             <Pressable
+              key={step}
               onPress={() => {
+                if (!isStepValid(step)) {
+                  Alert.alert('Error', 'Please fill in all required fields before proceeding.');
+                  return;
+                }
                 setCurrentStep(step);
               }}
-              key={step}
               style={[
                 styles.circle,
                 {
@@ -360,6 +414,7 @@ const handleNext = () => {
       </>
     );
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>

@@ -66,7 +66,6 @@ const fingerprintController = {
             return res.status(400).json({
               error: 'Fingerprint already exists',
             });
-           
           }
   
           // Save user registration details
@@ -83,6 +82,7 @@ const fingerprintController = {
             program,
             level,
             yearOfEnrollment,
+            fingerPrintData: true,
             fingerprint: hashedFingerprint, // Store hashed fingerprint data
           });
   
