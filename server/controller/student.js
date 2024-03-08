@@ -15,30 +15,32 @@ const fingerprintController = {
     register: async (req, res) => {
         try {
             const {
-                profilePic,
-                dateOfBirth,
-                studentID,
-                email,
-                phoneNumber,
-                department,
-                faculty,
-                program,
-                level,
-                yearOfEnrollment,
-                fingerPrint
+              profilePic,
+              name,
+              gender,
+              dateOfBirth,
+              studentID,
+              email,
+              phoneNumber,
+              department,
+              faculty,
+              program,
+              level,
+              yearOfEnrollment,
+              fingerPrint
             } = req.body;
 
             // Validation
-            if (!profilePic || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment || !fingerprint) {
+            if (!profilePic || !name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment || !fingerprint) {
                 return res.status(400).json({
                 error: 'All fields are required',
                 });
             }
 
             if (!emailFormat.test(email)) {
-                return res.status(400).json({
-                error: 'Invalid email format',
-                });
+              return res.status(400).json({
+              error: 'Invalid email format',
+              });
             }
 
             if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
@@ -65,6 +67,8 @@ const fingerprintController = {
             }
             const newStudent = new studentData({
               profilePic,
+              name,
+              gender,
               dateOfBirth,
               studentID,
               email,
@@ -89,10 +93,10 @@ const fingerprintController = {
         } 
         
         catch (error) {
-            console.error(`Error: ${error.message}`);
-            res.status(500).json({
-              error: 'Internal Server Error',
-            });
+          console.error(`Error: ${error.message}`);
+          res.status(500).json({
+            error: 'Internal Server Error',
+          });
         }
         
     },

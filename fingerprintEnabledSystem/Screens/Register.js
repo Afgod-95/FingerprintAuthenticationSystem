@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { View, Text, KeyboardAvoidingView, StyleSheet, Image, TextInput, Pressable, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import axios from 'axios'
 
 const Register = () => {
   const [user, setUser] = useState({
@@ -26,6 +27,8 @@ const Register = () => {
     hasFingerprintData: false,
   });
 
+  const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
+  
   const [currentStep, setCurrentStep] = useState(1);
 
   const totalSteps = 4;
@@ -93,21 +96,42 @@ const Register = () => {
         });
 
         if (result.success) {
-          Alert.alert('Message', 'Fingerprint authentication successful');
-          setUser({ ...user, hasFingerprintData: true });
-          const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
-          await AsyncStorage.setItem('profile', user.profile)
-          await AsyncStorage.setItem('name', user.name)
-          await AsyncStorage.setItem('dateOfBirth', DOB)
-          await AsyncStorage.setItem('studentID', user.studentID)
-          await AsyncStorage.setItem('email', user.email)
-          await AsyncStorage.setItem('phoneNumber', user.phoneNumber)
-          await AsyncStorage.setItem('department', user.department)
-          await AsyncStorage.setItem('faculty', user.faculty)
-          await AsyncStorage.setItem('program', user.program)
-          await AsyncStorage.setItem('level', user.level)
-          await AsyncStorage.setItem('enrollmentYear', user.enrollmentYear)
-          navigate.navigate('Home');
+          //register user using his fingerprint data
+          const userData = {
+            ...user,
+            dateOfBirth: selectedDate,
+          };
+          console.log("User Data to be registered : ",userData);
+          const registerNewUser = async () => {
+            try {
+              const response = await axios.post(backendURL, userData);
+              if (response.status === 200) {
+                Alert.alert('Message', response.data.message);
+                setUser({ ...user, hasFingerprintData: true });
+                const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
+                await AsyncStorage.setItem('profile', user.profile);
+                await AsyncStorage.setItem('name', user.name);
+                await AsyncStorage.setItem('dateOfBirth', DOB);
+                await AsyncStorage.setItem('studentID', user.studentID);
+                await AsyncStorage.setItem('email', user.email);
+                await AsyncStorage.setItem('phoneNumber', user.phoneNumber);
+                await AsyncStorage.setItem('department', user.department);
+                await AsyncStorage.setItem('faculty', user.faculty);
+                await AsyncStorage.setItem('program', user.program);
+                await AsyncStorage.setItem('level', user.level);
+                await AsyncStorage.setItem('enrollmentYear', user.enrollmentYear);
+                navigate.navigate('Home');
+              } else {
+                Alert.alert('Error', response.data.error);
+              }
+            } catch (error) {
+              console.error('Error during user registration:', error);
+              Alert.alert('Error', 'An error occurred while registering the user.');
+            }
+          };
+          
+          // Checking internet connection before
+          registerNewUser()
         } else {
           Alert.alert('Error', 'Fingerprint authentication failed');
         }
@@ -289,7 +313,7 @@ const Register = () => {
                 onChangeText={(text) => setUser({ ...user, enrollmentYear: text })}
               />
 
-              <BottomSheet ref={bottomSheetRef}>
+              <BottomSheet ref={bottomSheetRef} snapPoints={['25%', '50%', '75%']}>
                 <View style={styles.bottomSheetContent}>
                   <Text style={styles.bottomSheetHeader}>Select Department</Text>
                   {renderDepartmentItems()}

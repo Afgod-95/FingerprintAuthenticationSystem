@@ -3,6 +3,7 @@ import React from 'react'
 import { View, Text, KeyboardAvoidingView, StyleSheet, Image, Pressable, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as LocalAuthentication from 'expo-local-authentication'
+import axios from 'axios'
 
 const Login = () => {
     const fingerPrintImage = require('../assets/finger.png')
@@ -11,6 +12,9 @@ const Login = () => {
     const handleNavigation = () => {
       navigate.navigate('Register')
     }
+
+    const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
+  
 
     const handleLogin = async () => {
       try {
@@ -29,8 +33,15 @@ const Login = () => {
         });
 
         if (result.success) {
-          Alert.alert('Message', 'Fingerprint authentication successful');
-          navigate.navigate('Home')
+          await axios.post(backendURL, {
+            fingerprintData: result
+          }).then(res => {
+            console.log(res.data.message)
+            navigate.navigate('Home')
+          }).catch (error => {
+            console.log(error.message)
+          })
+         
         } 
         else {
           Alert.alert('Error', 'Fingerprint authentication failed');
