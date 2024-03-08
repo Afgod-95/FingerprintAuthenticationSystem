@@ -13,94 +13,99 @@ const generateToken = (userId) => {
 const fingerprintController = {
     //registration start point 
     register: async (req, res) => {
-        try {
-            const {
-              profilePic,
-              name,
-              gender,
-              dateOfBirth,
-              studentID,
-              email,
-              phoneNumber,
-              department,
-              faculty,
-              program,
-              level,
-              yearOfEnrollment,
-              fingerPrint
-            } = req.body;
-
-            // Validation
-            if (!profilePic || !name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment || !fingerprint) {
-                return res.status(400).json({
-                error: 'All fields are required',
-                });
-            }
-
-            if (!emailFormat.test(email)) {
-              return res.status(400).json({
-              error: 'Invalid email format',
-              });
-            }
-
-            if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
-                return res.status(400).json({
-                error: 'Invalid mobile number',
-                });
-            }
-
-            const exist = await studentData.findOne({ email });
-            if (exist && exist.phoneNumber === phoneNumber) {
-                return res.status(400).json({
-                error: 'Email and phone number already exist',
-                });
-            }
-
-            // Hash the fingerprintData before saving
-            const hashedFingerprint = crypto.createHash('sha256').update(fingerPrint).digest('hex');
-            // Check if the hashed fingerprint data already exists in the database
-            const fingerPrintExist = await studentData.findOne({ fingerprint: hashedFingerprint });
-            if (fingerPrintExist) {
-              return res.status(400).json({
-                error: 'Fingerprint already exists',
-              });
-            }
-            const newStudent = new studentData({
-              profilePic,
-              name,
-              gender,
-              dateOfBirth,
-              studentID,
-              email,
-              phoneNumber,
-              department,
-              faculty,
-              program,
-              fingerPrintData: true,
-              fingerprint: hashedFingerprint,
-              level,
-              yearOfEnrollment,
-              token,
+      try {
+          const {
+            profilePic,
+            name,
+            gender,
+            dateOfBirth,
+            studentID,
+            email,
+            phoneNumber,
+            department,
+            faculty,
+            program,
+            level,
+            yearOfEnrollment,
+            fingerPrint
+          } = req.body;
+  
+          // Validation
+          if (!profilePic || !name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment || !fingerPrint) {
+            return res.status(400).json({
+            error: 'All fields are required',
             });
-      
-            await newStudent.save();
-      
-            res.json({
-              message: 'Registration successful',
-              newStudent,
+            console.log('All fields are required')
+          }
+
+          
+  
+          if (!emailFormat.test(email)) {
+            return res.status(400).json({
+            error: 'Invalid email format',
             });
-            const token = generateToken(exist ? { userId: exist.user._id } : null)
-        } 
-        
-        catch (error) {
-          console.error(`Error: ${error.message}`);
-          res.status(500).json({
-            error: 'Internal Server Error',
+            console.log('Invalid email format')
+          }
+  
+          if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
+              return res.status(400).json({
+              error: 'Invalid mobile number',
+              });
+              console.log('Invalid mobile number')
+          }
+  
+          const exist = await studentData.findOne({ email });
+          if (exist && exist.phoneNumber === phoneNumber) {
+              return res.status(400).json({
+              error: 'Email and phone number already exist',
+              });
+              console.log('Email and phone number already exist')
+          }
+  
+          // Hash the fingerprint data before saving
+          const hashedFingerprint = crypto.createHash('sha256').update(fingerPrint).digest('hex');
+          // Check if the hashed fingerprint data already exists in the database
+          const fingerPrintExist = await studentData.findOne({ fingerprint: hashedFingerprint });
+          if (fingerPrintExist) {
+            return res.status(400).json({
+              error: 'Fingerprint already exists',
+            });
+            console.log('Fingerprint already exists')
+          }
+  
+          // Save user registration details
+          const newStudent = new studentData({
+            profilePic,
+            name,
+            gender,
+            dateOfBirth,
+            studentID,
+            email,
+            phoneNumber,
+            department,
+            faculty,
+            program,
+            level,
+            yearOfEnrollment,
+            fingerprint: hashedFingerprint, // Store hashed fingerprint data
           });
-        }
-        
+  
+          await newStudent.save();
+  
+          res.json({
+            message: 'Registration successful',
+            newStudent,
+          });
+          console.log('Registration successful',newStudent )
+      } 
+      catch (error) {
+        console.error(`Error: ${error.message}`);
+        res.status(500).json({
+          error: 'Internal Server Error',
+        });
+      }
     },
-    //registration endPoint
+      //registration endPoint
 
     login: async (req, res) => {
         try {
@@ -109,6 +114,7 @@ const fingerprintController = {
             return res.status(400).json({
               error: 'Fingerprint required',
             });
+            console.log( 'Fingerprint required')
           }
     
           // Hash the provided fingerprint data
