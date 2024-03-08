@@ -8,15 +8,29 @@ const dotenv = require('dotenv').config()
 const app = express()
 const PORT = 5031
 
-//middlewares 
-app.use(bodyParser.urlencoded({extended: true}))
-app.use(bodyParser.json())
-app.use(cors())
+// Middlewares with error handling
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(cors(), (err, req, res, next) => { // Error handler for CORS
+  if (err) {
+    console.error('CORS Error:', err.message);
+    res.status(500).json({ error: 'CORS configuration error' });
+  } else {
+    next();
+  }
+});
+app.use((err, req, res, next) => { // Error handler for body parsing
+  if (err) {
+    console.error('Body Parser Error:', err.message);
+    res.status(400).json({ error: 'Invalid request body format' });
+  } else {
+    next();
+  }
+});
 
-//routes or path
-console.log('Router loaded:', router); // Add this line
-console.log('Routes added:', app.routes); // Add this line
-
+// Routes
+console.log('Router loaded:', router);
+console.log('Routes added:', app.routes);
 app.use(router);
 
 //database connection
