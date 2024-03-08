@@ -10,7 +10,6 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import axios from 'axios'
-import { NetInfo } from 'react-native-community/netinfo'
 
 const Register = () => {
   const [user, setUser] = useState({
@@ -76,13 +75,11 @@ const Register = () => {
     }
   };
 
-  if (!user.name || !user.dateOfBirth || !user.studentID || !user.email || !user.phoneNumber || !user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
-    Alert.alert('Error', 'Please fill in all required fields.');
-    return;
-  }
+  
 
   async function registerNewUser() {
     try {
+      // Prepare user details
       const userDetails = {
         profilePic: user.profile,
         name: user.name,
@@ -112,13 +109,15 @@ const Register = () => {
         }
       }
   
+      // Send user details to backend for registration
       const response = await axios.post(backendURL, userDetails);
   
+      // Handle response from backend
       if (response.data.status === 200) {
+        // Registration successful
         Alert.alert(response.data.message);
-        console.log(response.data.message);
-        await AsyncStorage.setItem('user', JSON.stringify(userDetails)); // Store user data
-        navigate.navigate('Home');
+        await AsyncStorage.setItem('user', JSON.stringify(userDetails)); // Store user data locally
+        navigate.navigate('Home'); // Navigate to home screen
       } else if (response.data.error) {
         // Handle error from backend
         Alert.alert('Registration Error', response.data.error);
@@ -137,6 +136,9 @@ const Register = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } 
+    if (!user.name || !user.dateOfBirth || !user.studentID || !user.email || !user.phoneNumber || !user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
+      Alert.alert('Error', 'Please fill in all required fields.');
+    }
     registerNewUser()
   };
 
