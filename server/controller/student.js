@@ -47,14 +47,14 @@ const fingerprintController = {
   
           if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
               return res.status(400).json({
-              error: 'Invalid mobile number',
+                error: 'Invalid mobile number',
               });
           }
   
           const exist = await studentData.findOne({ email });
           if (exist && exist.phoneNumber === phoneNumber) {
               return res.status(400).json({
-              error: 'Email and phone number already exist',
+                error: 'Email and phone number already exist',
               });
           }
   

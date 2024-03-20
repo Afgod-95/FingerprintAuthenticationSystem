@@ -15,15 +15,17 @@ const Register = () => {
   const [user, setUser] = useState({
     profile: '',
     name: '',
+    gender: '',
     dateOfBirth: '',
     studentID: '',
+    email: '',
+    phoneNumber: '',
     department: '',
     faculty: '',
     program: '',
     level: '',
     enrollmentYear: '',
-    email: '',
-    phoneNumber: ''
+    email: '', 
   });
 
   const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
@@ -96,7 +98,7 @@ const Register = () => {
       if (result.success) {
         // Register user using his fingerprint data
         const userData = { 
-          fingerprintSuccess: result.success,
+         fingerprint: result.success,
           ...user
         };
         console.log(`Fingerprint: ${result.success}`);
@@ -125,8 +127,8 @@ const Register = () => {
 
   useEffect(() => {
     submitData()
-    console.log("An error occured")
-  },)
+    
+  },[])
   
 
   const handleNext = () => {

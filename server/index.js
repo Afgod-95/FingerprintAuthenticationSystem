@@ -8,10 +8,21 @@ const dotenv = require('dotenv').config()
 const app = express()
 const PORT = 5031
 
-// Middlewares with error handling
+// Middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors(), (err, req, res, next) => { // Error handler for CORS
+app.use(cors()); // CORS middleware
+// Regular routes
+app.use(router);
+console.log('Routes added:');
+app._router.stack.forEach((middleware) => {
+  if (middleware.route) {
+    console.log(middleware.route.path);
+  }
+});
+
+// Error handling middleware for CORS
+app.use((err, req, res, next) => {
   if (err) {
     console.error('CORS Error:', err.message);
     res.status(500).json({ error: 'CORS configuration error' });
@@ -19,7 +30,9 @@ app.use(cors(), (err, req, res, next) => { // Error handler for CORS
     next();
   }
 });
-app.use((err, req, res, next) => { // Error handler for body parsing
+
+// Error handling middleware for body parsing
+app.use((err, req, res, next) => {
   if (err) {
     console.error('Body Parser Error:', err.message);
     res.status(400).json({ error: 'Invalid request body format' });
@@ -27,11 +40,6 @@ app.use((err, req, res, next) => { // Error handler for body parsing
     next();
   }
 });
-
-// Routes
-console.log('Router loaded:', router);
-console.log('Routes added:', app.routes);
-app.use(router);
 
 //database connection
 mongoose.connect(process.env.MONGODB_URI).then(() => {
