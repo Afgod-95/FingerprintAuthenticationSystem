@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { View, Text, KeyboardAvoidingView, StyleSheet, Image, TextInput, Pressable, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -108,17 +108,7 @@ const Register = () => {
           Alert.alert('Message', response.data.message);
           setUser({ ...user, hasFingerprintData: true });
           const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
-          await AsyncStorage.setItem('profile', user.profile);
-          await AsyncStorage.setItem('name', user.name);
-          await AsyncStorage.setItem('dateOfBirth', DOB);
-          await AsyncStorage.setItem('studentID', user.studentID);
-          await AsyncStorage.setItem('email', user.email);
-          await AsyncStorage.setItem('phoneNumber', user.phoneNumber);
-          await AsyncStorage.setItem('department', user.department);
-          await AsyncStorage.setItem('faculty', user.faculty);
-          await AsyncStorage.setItem('program', user.program);
-          await AsyncStorage.setItem('level', user.level);
-          await AsyncStorage.setItem('enrollmentYear', user.enrollmentYear);
+          await AsyncStorage.setItem('userData', JSON.stringify(userData));
           await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
           navigate.navigate('Home');
         } else {
@@ -132,6 +122,11 @@ const Register = () => {
       Alert.alert('Error', error.message)
     }
   };
+
+  useEffect(() => {
+    submitData()
+    console.log("An error occured")
+  },)
   
 
   const handleNext = () => {

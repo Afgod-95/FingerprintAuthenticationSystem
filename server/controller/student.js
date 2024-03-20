@@ -82,7 +82,6 @@ const fingerprintController = {
             program,
             level,
             yearOfEnrollment,
-            fingerPrintData: true,
             fingerprint: hashedFingerprint, // Store hashed fingerprint data
           });
   

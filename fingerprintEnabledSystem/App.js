@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 
 export default function App() {
 
-  useEffect(()=>{
+   /* useEffect(()=>{
     const checkInternetConnection = async () => {
       try {
         const connection = await NetInfo.fetch();
@@ -25,7 +25,7 @@ export default function App() {
       }
     };
     checkInternetConnection()
-  }, [])
+  }, []) */
   return (
    
     <>
