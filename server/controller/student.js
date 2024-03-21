@@ -27,6 +27,7 @@ const fingerprintController = {
             program,
             level,
             yearOfEnrollment,
+            fingerPrint
           } = req.body;
   
           // Validation
