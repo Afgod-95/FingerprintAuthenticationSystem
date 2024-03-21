@@ -25,7 +25,6 @@ const Register = () => {
     program: '',
     level: '',
     enrollmentYear: '',
-    email: '', 
   });
 
   const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
@@ -36,12 +35,10 @@ const Register = () => {
   const steps = Array.from({ length: totalSteps }, (_, index) => index + 1);
 
   const navigate = useNavigation();
-  const image = require('../assets/profile.jpeg');
 
   const handleNavigation = () => {
     navigate.navigate('Login');
   };
-
 
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false)
 
@@ -77,6 +74,7 @@ const Register = () => {
   };
 
   // Data submission
+ 
   const submitData = async () => {
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
@@ -92,58 +90,79 @@ const Register = () => {
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Authenticate with your fingerprint',
       });
-  
+
       console.log('Fingerprint result:', JSON.stringify(result)); // Log fingerprint result as plain text
-  
+
       if (result.success) {
         // Register user using his fingerprint data
-        const userData = { 
-         fingerprint: result.success,
-          ...user
-        };
-        console.log(`Fingerprint: ${result.success}`);
-        console.log("User Data to be registered: ", userData);
-        const response = await axios.post(backendURL, userData);
-        if (response.status === 200) {
+        const formattedDateOfBirth = user.dateOfBirth.toString(); // Format date to ISO 8601 string
+        const fingerPrint = result.success.toString(); // Get only
+        console.log(`Fingerprint: ${fingerPrint}`);
+        const requestData = {
+          profilePic: user.profile,
+          name: user.name,
+          gender: user.gender,
+          dateOfBirth: user.dateOfBirth instanceof Date ? formattedDateOfBirth : '',
+          studentID: user.studentID,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          department: user.department,
+          faculty: user.faculty,
+          program: user.program,
+          level: user.level,
+          yearOfEnrollment: user.enrollmentYear,
+          fingerprint: fingerPrint
+        }
+
+        const response = await axios.post(backendURL, requestData);
+        if (response.data.error){
+          Alert.alert('Error', response.data.error);
+          console.log(`Error: ${response.data.error.message}`)
+        }
+      
+        else if (response.status === 200) {
           const { token } = response.data;
-          console.log(`token: ${token}`)
+          console.log(`token: ${token}`);
           Alert.alert('Message', response.data.message);
-          setUser({ ...user, hasFingerprintData: true });
-          const DOB = user.dateOfBirth instanceof Date ? user.dateOfBirth.toLocaleDateString() : '';
-          await AsyncStorage.setItem('userData', JSON.stringify(userData));
+          await AsyncStorage.setItem('userData', JSON.stringify(user));
           await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
           navigate.navigate('Home');
-        } else {
-          Alert.alert('Error', response.data.error);
+        } 
+        else {
+          console.error('Axios Request Failed. Response:', response);
+          Alert.alert('Error', 'An error occured');
         }
-      } else {
+      } 
+      else {
         Alert.alert('Error', 'Fingerprint authentication failed');
       }
     } catch (error) {
-      console.error('Error during fingerprint authentication:', error);
-      Alert.alert('Error', error.message)
+      if (error.response) {
+        console.log(error.response.data);
+        Alert.alert(error.response.data.error);
+      } else if (error.request) {
+        console.log('Request made but no response received.');
+      } else {
+        console.log('Error:', error.message);
+        Alert.alert('An error occurred while registering');
+      }
     }
   };
 
-  useEffect(() => {
-    submitData()
-    
-  },[])
-  
 
   const handleNext = () => {
     if (!isStepValid(currentStep)) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+      // Alert about the specific step's validation error
       return;
     }
   
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
-    } 
-    else {
+    } else {
       submitData(); // Trigger data submission when all steps are completed
     }
   };
+  
   
 
   const isStepValid = (step) => {
@@ -259,14 +278,22 @@ const Register = () => {
                 value={user.name}
                 onChangeText={(text) => setUser({ ...user, name: text })}
               />
-               {Platform.OS === 'ios' ? (
-                <DateTimePickerModal 
-                  isVisible = {isDatePickerVisible}
-                  mode='date'
-                  onConfirm={handleConfirm}
-                  onCancel={hideDatePicker}
-                
-                />
+              <TextInput
+                style={[styles.input, { margin: 15 }]}
+                placeholder="Gender"
+                placeholderTextColor="#acadac"
+                value={user.gender}
+                onChangeText={(text) => setUser({ ...user, gender: text })}
+              />
+
+              {Platform.OS === 'ios' ? (
+              <DateTimePickerModal 
+                isVisible = {isDatePickerVisible}
+                mode='date'
+                onConfirm={handleConfirm}
+                onCancel={hideDatePicker}
+              
+              />
               ) : (
                 <View style = {{alignItems: 'center', justifyContent: 'center'}}> 
                   <Pressable onPress={showDatePicker}  style={[styles.input, { justifyContent: 'center'}]}>

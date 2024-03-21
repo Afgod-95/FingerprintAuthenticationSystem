@@ -27,11 +27,10 @@ const fingerprintController = {
             program,
             level,
             yearOfEnrollment,
-            fingerPrint
           } = req.body;
   
           // Validation
-          if (!profilePic || !name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment || !fingerPrint) {
+          if (!profilePic || !name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
             return res.status(400).json({
             error: 'All fields are required',
             });
