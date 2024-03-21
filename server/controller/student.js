@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const studentData = require('../model/student.js');
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken');
+const multer = require('multer')
+const path = require('path')
+const fs = require('fs')
 const emailFormat = /^[a-zA-Z0-9_.+]*[a-zA-Z][a-zA-Z0-9_.+]*@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const ghanaPhoneNumberRegex = /^0[23456789]([0-9]{8})$/;
 
@@ -10,12 +13,25 @@ const generateToken = (userId) => {
   return token;
 };
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    //file location
+    cb(null, '../Images');
+  },
+  filename: (req, file, cb) => {
+    console.log(file)
+    const fileName = Date.now() +  path.extname(file.originalname);
+    cb(null, fileName);
+  }
+})
+//image uploader
+const upload = multer({storage : storage})
+
 const fingerprintController = {
     //registration start point 
     register: async (req, res) => {
       try {
           const {
-            profilePic,
             name,
             gender,
             dateOfBirth,
@@ -30,15 +46,20 @@ const fingerprintController = {
             fingerPrint
           } = req.body;
   
+          if (!req.file){
+            return res.status(400).json({
+              error: "Profile picture required"
+            })
+          }
+
+          const profilePic = req.file.path
           // Validation
-          if (!profilePic || !name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
+          if (!name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
             return res.status(400).json({
             error: 'All fields are required',
             });
           }
 
-          
-  
           if (!emailFormat.test(email)) {
             return res.status(400).json({
             error: 'Invalid email format',
@@ -70,7 +91,7 @@ const fingerprintController = {
   
           // Save user registration details
           const newStudent = new studentData({
-            profilePic,
+            profilePic: fs.readFileSync(profilePic),
             name,
             gender,
             dateOfBirth,

@@ -74,75 +74,72 @@ const Register = () => {
   };
 
   // Data submission
-  const submitData = async () => {
-    try {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      if (!hasHardware) {
-        Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-        return;
-      }
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      if (!isEnrolled) {
-        Alert.alert('Error', 'No fingerprint enrolled on this device.');
-        return;
-      }
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate with your fingerprint',
-      });
-  
-      console.log('Fingerprint result:', JSON.stringify(result)); // Log fingerprint result as plain text
-  
-      if (result.success) {
-        // Register user using his fingerprint data
-        const formattedDateOfBirth = user.dateOfBirth.toString(); // Format date to ISO 8601 string
-        const fingerPrint = result.base64; // Get fingerprint data
-        console.log(`Fingerprint: ${fingerPrint}`);
-        const requestData = {
-          profilePic: user.profile,
-          name: user.name,
-          gender: user.gender,
-          dateOfBirth: user.dateOfBirth instanceof Date ? formattedDateOfBirth : '',
-          studentID: user.studentID,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          department: user.department,
-          faculty: user.faculty,
-          program: user.program,
-          level: user.level,
-          yearOfEnrollment: user.enrollmentYear,
-          fingerprint: fingerPrint
-        }
-  
-        const response = await axios.post(backendURL, requestData);
-        if (response.data.error) {
-          Alert.alert('Error', response.data.error);
-          console.log(`Error: ${response.data.error.message}`)
-        } else if (response.status === 200) {
-          const { token } = response.data;
-          console.log(`token: ${token}`);
-          Alert.alert('Message', response.data.message);
-          await AsyncStorage.setItem('userData', JSON.stringify(user));
-          await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
-          navigate.navigate('Home');
-        } else {
-          console.error('Axios Request Failed. Response:', response);
-          Alert.alert('Error', 'An error occurred');
-        }
-      } else {
-        Alert.alert('Error', 'Fingerprint authentication failed');
-      }
-    } catch (error) {
-      if (error.response) {
-        console.log(error.response.data);
-        Alert.alert(error.response.data.error);
-      } else if (error.request) {
-        console.log('Request made but no response received.');
-      } else {
-        console.log('Error:', error.message);
-        Alert.alert('An error occurred while registering');
-      }
+  // Data submission
+const submitData = async () => {
+  try {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    if (!hasHardware) {
+      Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
+      return;
     }
-  };
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+    if (!isEnrolled) {
+      Alert.alert('Error', 'No fingerprint enrolled on this device.');
+      return;
+    }
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate with your fingerprint',
+    });
+
+    console.log('Fingerprint result:', JSON.stringify(result)); // Log fingerprint result as plain text
+
+    if (result.success) {
+      // Register user using his fingerprint data
+      const formattedDateOfBirth = user.dateOfBirth.toString(); // Format date to ISO 8601 string
+      const fingerPrint = result.success; // Get fingerprint data
+      console.log(`Fingerprint: ${fingerPrint}`);
+      const requestData = {
+        profilePic: user.profile,
+        name: user.name,
+        gender: user.gender,
+        dateOfBirth: user.dateOfBirth instanceof Date ? formattedDateOfBirth : '',
+        studentID: user.studentID,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        department: user.department,
+        faculty: user.faculty,
+        program: user.program,
+        level: user.level,
+        yearOfEnrollment: user.enrollmentYear,
+        fingerprint: fingerPrint // Ensure Base64 encoded fingerprint data
+      }
+
+      console.log(`Request Data: \n ${JSON.stringify(requestData)}`)
+
+      const response = await axios.post(backendURL, requestData);
+      if (response.data.error) {
+        Alert.alert('Error', response.data.error);
+        console.log(`Error: ${response.data.error.message}`)
+      } else if (response.status === 200) {
+        const { token } = response.data;
+        console.log(`token: ${token}`);
+        Alert.alert('Message', response.data.message);
+        await AsyncStorage.setItem('userData', JSON.stringify(user));
+        await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
+        navigate.navigate('Home');
+      } else {
+        console.error('Axios Request Failed. Response:', response);
+        Alert.alert('Error', 'An error occurred');
+      }
+    } else {
+      Alert.alert('Error', 'Fingerprint authentication failed');
+    }
+  } catch (error) {
+    console.log('Error:', error.message);
+    Alert.alert('An error occurred while registering');
+  }
+};
+
   
 
   const handleNext = () => {
