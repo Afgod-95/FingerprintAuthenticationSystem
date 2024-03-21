@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const studentSchema = new mongoose.Schema({
     profilePic: {
-        type: String,
+        type: Buffer,   
         required: true,
     },
     name: {

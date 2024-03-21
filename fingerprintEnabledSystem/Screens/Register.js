@@ -74,7 +74,6 @@ const Register = () => {
   };
 
   // Data submission
- 
   const submitData = async () => {
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
@@ -90,13 +89,13 @@ const Register = () => {
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Authenticate with your fingerprint',
       });
-
+  
       console.log('Fingerprint result:', JSON.stringify(result)); // Log fingerprint result as plain text
-
+  
       if (result.success) {
         // Register user using his fingerprint data
         const formattedDateOfBirth = user.dateOfBirth.toString(); // Format date to ISO 8601 string
-        const fingerPrint = result.success.toString(); // Get only
+        const fingerPrint = result.base64; // Get fingerprint data
         console.log(`Fingerprint: ${fingerPrint}`);
         const requestData = {
           profilePic: user.profile,
@@ -113,27 +112,23 @@ const Register = () => {
           yearOfEnrollment: user.enrollmentYear,
           fingerprint: fingerPrint
         }
-
+  
         const response = await axios.post(backendURL, requestData);
-        if (response.data.error){
+        if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error.message}`)
-        }
-      
-        else if (response.status === 200) {
+        } else if (response.status === 200) {
           const { token } = response.data;
           console.log(`token: ${token}`);
           Alert.alert('Message', response.data.message);
           await AsyncStorage.setItem('userData', JSON.stringify(user));
           await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
           navigate.navigate('Home');
-        } 
-        else {
+        } else {
           console.error('Axios Request Failed. Response:', response);
-          Alert.alert('Error', 'An error occured');
+          Alert.alert('Error', 'An error occurred');
         }
-      } 
-      else {
+      } else {
         Alert.alert('Error', 'Fingerprint authentication failed');
       }
     } catch (error) {
@@ -148,7 +143,7 @@ const Register = () => {
       }
     }
   };
-
+  
 
   const handleNext = () => {
     if (!isStepValid(currentStep)) {
@@ -159,6 +154,7 @@ const Register = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Check if all steps are completed before triggering fingerprint authentication
       submitData(); // Trigger data submission when all steps are completed
     }
   };
