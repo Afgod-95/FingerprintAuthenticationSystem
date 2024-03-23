@@ -136,9 +136,6 @@ const submitData = async () => {
       // Register user using his fingerprint data
       const fingerPrint = result.success.toString(); // Get fingerprint data
       console.log(`Fingerprint: ${fingerPrint}`);
-
-      console.log(`Request Data: \n ${JSON.stringify(requestData)}`)
-
       const response = await axios.post(backendURL, {
         name: user.name,
         gender: user.gender,
@@ -153,9 +150,9 @@ const submitData = async () => {
         yearOfEnrollment: user.enrollmentYear,
         fingerprint: fingerPrint 
       });
-      if (response.data.error) {
-        Alert.alert('Error', response.data.error);
-        console.log(`Error: ${response.data.error.message}`)
+      if (response.error) {
+        Alert.alert('Error', response.error);
+        console.log(`Error: ${response.error.message}`)
       } 
       else if (response.status === 200) {
         const { token } = response.data;
@@ -177,7 +174,7 @@ const submitData = async () => {
   } catch (error) {
     console.log('Error:', error.message);
     console.log(error)
-    Alert.alert('Error','An error occurred while registering');
+    Alert.alert('Error',error.message);
   }
 };
 

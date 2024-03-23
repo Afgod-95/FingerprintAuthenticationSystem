@@ -20,18 +20,19 @@ const Login = () => {
         const response = await axios.post(backendURL, {
           fingerprint: fingerprint
         })  // Submit data to the
-        if (response.error){
-          Alert.alert('Error', response.error.mesage)
-          console.error(response.error.mesage);
+        if (response.data.error){
+          Alert.alert('Error', `${response.data.error}`);
+          console.error(response.data.error);
         }
         else if (response.status === 200) {
-          Alert.alert('Error', response.data.mesage)
           console.error(response.data.mesage);
+          Alert.alert('Success');
         }
+        
       } 
       catch (error) {
         console.log(error.message)
-        Alert.alert('Error', error.message)
+        Alert.alert(error.message)
       }
     }
 
@@ -59,7 +60,7 @@ const Login = () => {
           Alert.alert('Error', 'Fingerprint authentication failed');
         }
       } catch (error) {
-        console.error('Error during fingerprint authentication:', error);
+        console.log('Error during fingerprint authentication:', error.message);
       }
     };
     
