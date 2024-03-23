@@ -15,6 +15,25 @@ const Login = () => {
 
     const backendURL = "https://fingerprintenabled.onrender.com/api/auth/login"
   
+    const userLogin = async (fingerprint) => {
+      try {
+        const response = await axios.post(backendURL, {
+          fingerprint: fingerprint
+        })  // Submit data to the
+        if (response.error){
+          Alert.alert('Error', response.error.mesage)
+          console.error(response.error.mesage);
+        }
+        else if (response.status === 200) {
+          Alert.alert('Error', response.data.mesage)
+          console.error(response.data.mesage);
+        }
+      } 
+      catch (error) {
+        console.log(error.message)
+        Alert.alert('Error', error.message)
+      }
+    }
 
     const handleLogin = async () => {
       try {
@@ -31,18 +50,19 @@ const Login = () => {
         const result = await LocalAuthentication.authenticateAsync({
           promptMessage: 'Authenticate with your fingerprint',
         });
-
+    
         if (result.success) {
-          console.log(result.success)
-        }
-        else {
+          const fingerprintData = result.success.toString();
+          console.log(typeof fingerprintData);
+          userLogin(fingerprintData); // Send fingerprint data directly as a string
+        } else {
           Alert.alert('Error', 'Fingerprint authentication failed');
         }
-        
       } catch (error) {
         console.error('Error during fingerprint authentication:', error);
       }
     };
+    
   
   return (
    <SafeAreaView style = {styles.container}>

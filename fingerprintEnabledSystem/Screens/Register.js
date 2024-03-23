@@ -64,7 +64,6 @@ const Register = () => {
 
 
   // Image Picker
- // Image Picker
 const pickImage = async () => {
   // Show options for selecting image from camera or file system
   Alert.alert(
@@ -115,7 +114,6 @@ const handleImagePickerResult = (result) => {
 
 
   // Data submission
-  // Data submission
 const submitData = async () => {
   try {
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
@@ -136,9 +134,12 @@ const submitData = async () => {
 
     if (result.success) {
       // Register user using his fingerprint data
-      const fingerPrint = result.success; // Get fingerprint data
+      const fingerPrint = result.success.toString(); // Get fingerprint data
       console.log(`Fingerprint: ${fingerPrint}`);
-      const requestData = {
+
+      console.log(`Request Data: \n ${JSON.stringify(requestData)}`)
+
+      const response = await axios.post(backendURL, {
         name: user.name,
         gender: user.gender,
         dateOfBirth: user.dateOfBirth,
@@ -151,18 +152,16 @@ const submitData = async () => {
         level: user.level,
         yearOfEnrollment: user.enrollmentYear,
         fingerprint: fingerPrint 
-      }
-
-      console.log(`Request Data: \n ${JSON.stringify(requestData)}`)
-
-      const response = await axios.post(backendURL, requestData);
+      });
       if (response.data.error) {
         Alert.alert('Error', response.data.error);
         console.log(`Error: ${response.data.error.message}`)
-      } else if (response.status === 200) {
+      } 
+      else if (response.status === 200) {
         const { token } = response.data;
         console.log(`token: ${token}`);
         Alert.alert('Message', response.data.message);
+        console.log(response.data.message)
         await AsyncStorage.setItem('userData', JSON.stringify(user));
         await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
         navigate.navigate('Home');
@@ -171,7 +170,8 @@ const submitData = async () => {
         console.error('Axios Request Failed. Response:', response);
         Alert.alert('Error', `${response}`);
       }*/}
-    } else {
+    } 
+    else {
       Alert.alert('Error', 'Fingerprint authentication failed');
     }
   } catch (error) {

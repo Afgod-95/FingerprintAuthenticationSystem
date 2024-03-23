@@ -15,6 +15,8 @@ app.use(cors()); // CORS middleware
 // Regular routes
 app.use(router);
 console.log('Routes added:');
+
+
 app._router.stack.forEach((middleware) => {
   if (middleware.route) {
     console.log(middleware.route.path);
@@ -23,13 +25,23 @@ app._router.stack.forEach((middleware) => {
 
 // Error handling middleware for CORS
 app.use((err, req, res, next) => {
-  if (err) {
-    console.error('CORS Error:', err.message);
-    res.status(500).json({ error: 'CORS configuration error' });
-  } else {
-    next();
+  if (err.code === 'EBADCSRFTOKEN') {
+    // Handle CSRF token errors
+    return res.status(403).json({ error: 'Invalid CSRF token' });
   }
-});
+
+  if (err.name === 'UnauthorizedError') {
+    // Handle unauthorized errors
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  if (err) {
+    // Handle other errors
+    console.error('Error:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+  next();
+})
 
 // Error handling middleware for body parsing
 app.use((err, req, res, next) => {
