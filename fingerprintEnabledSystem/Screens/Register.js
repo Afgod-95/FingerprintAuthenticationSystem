@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { View, Text, KeyboardAvoidingView, StyleSheet, Image, TextInput, Pressable, Platform, Alert } from 'react-native';
+import { View, Text, KeyboardAvoidingView, StyleSheet, Image, TextInput, TouchableOpacity, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -45,33 +45,74 @@ const Register = () => {
   const showDatePicker = () => {
     setIsDatePickerVisible(true)
   }
-
+  
   const hideDatePicker = () => {
     setIsDatePickerVisible(false)
   }
-
+  
   const handleConfirm = (selectedDate) => {
-    console.log(`A date has been picked: ${selectedDate}`)
-    setUser({ ...user, dateOfBirth: selectedDate });
-    hideDatePicker()
-  }
+    
+    const dateObject = new Date(selectedDate); // Convert selectedDate to a Date object
+    const formattedDate = dateObject.toLocaleDateString(); // Extract date part only
+    console.log(`A date has been picked: ${formattedDate}`);
+    setUser({ ...user, dateOfBirth: formattedDate });
+    hideDatePicker();
+  };
+  
+  
+  
 
 
   // Image Picker
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+ // Image Picker
+const pickImage = async () => {
+  // Show options for selecting image from camera or file system
+  Alert.alert(
+    'Select Image Source',
+    'Choose the source of the image',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Camera',
+        onPress: async () => {
+          let result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+          });
 
-    console.log(result);
+          handleImagePickerResult(result);
+        },
+      },
+      {
+        text: 'Gallery',
+        onPress: async () => {
+          let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+          });
 
-    if (!result.cancelled) {
-      setUser({ ...user, profile: result.uri });
-    }
-  };
+          handleImagePickerResult(result);
+        },
+      },
+    ],
+    { cancelable: false }
+  );
+};
+
+// Function to handle the result of image picker
+const handleImagePickerResult = (result) => {
+  if (!result.cancelled) {
+    setUser({ ...user, profile: result.uri });
+  }
+};
+
 
   // Data submission
   // Data submission
@@ -95,14 +136,12 @@ const submitData = async () => {
 
     if (result.success) {
       // Register user using his fingerprint data
-      const formattedDateOfBirth = user.dateOfBirth.toString(); // Format date to ISO 8601 string
       const fingerPrint = result.success; // Get fingerprint data
       console.log(`Fingerprint: ${fingerPrint}`);
       const requestData = {
-        profilePic: user.profile,
         name: user.name,
         gender: user.gender,
-        dateOfBirth: user.dateOfBirth instanceof Date ? formattedDateOfBirth : '',
+        dateOfBirth: user.dateOfBirth,
         studentID: user.studentID,
         email: user.email,
         phoneNumber: user.phoneNumber,
@@ -111,7 +150,7 @@ const submitData = async () => {
         program: user.program,
         level: user.level,
         yearOfEnrollment: user.enrollmentYear,
-        fingerprint: fingerPrint // Ensure Base64 encoded fingerprint data
+        fingerprint: fingerPrint 
       }
 
       console.log(`Request Data: \n ${JSON.stringify(requestData)}`)
@@ -127,20 +166,21 @@ const submitData = async () => {
         await AsyncStorage.setItem('userData', JSON.stringify(user));
         await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
         navigate.navigate('Home');
-      } else {
+      } 
+      {/*else {
         console.error('Axios Request Failed. Response:', response);
-        Alert.alert('Error', 'An error occurred');
-      }
+        Alert.alert('Error', `${response}`);
+      }*/}
     } else {
       Alert.alert('Error', 'Fingerprint authentication failed');
     }
   } catch (error) {
     console.log('Error:', error.message);
-    Alert.alert('An error occurred while registering');
+    console.log(error)
+    Alert.alert('Error','An error occurred while registering');
   }
 };
 
-  
 
   const handleNext = () => {
     if (!isStepValid(currentStep)) {
@@ -216,13 +256,13 @@ const submitData = async () => {
   // Render department items
   const renderDepartmentItems = () => {
     return departments.map((department) => (
-      <Pressable
+      <TouchableOpacity
         key={department}
         style={styles.departmentItem}
         onPress={() => handleDepartmentSelect(department)}
       >
         <Text style={styles.departmentText}>{department}</Text>
-      </Pressable>
+      </TouchableOpacity>
     ));
   };
 
@@ -240,7 +280,7 @@ const submitData = async () => {
               style={styles.gradientBorder}
             >
               <Image source={{ uri: user.profile || 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg' }} style={styles.image} />
-              <Pressable
+              <TouchableOpacity
                 onPress={pickImage}
                 style={{
                   alignItems: 'center',
@@ -255,7 +295,7 @@ const submitData = async () => {
                 }}
               >
                 <Feather name="camera" size={28} color="#0CEEF2" />
-              </Pressable>
+              </TouchableOpacity>
             </LinearGradient>
           </>
         );
@@ -289,9 +329,9 @@ const submitData = async () => {
               />
               ) : (
                 <View style = {{alignItems: 'center', justifyContent: 'center'}}> 
-                  <Pressable onPress={showDatePicker}  style={[styles.input, { justifyContent: 'center'}]}>
-                    <Text style={{color: '#acadac'}}>{user.dateOfBirth ? user.dateOfBirth.toLocaleDateString() : 'Date of Birth'}</Text>
-                  </Pressable>
+                  <TouchableOpacity onPress={showDatePicker}  style={[styles.input, { justifyContent: 'center'}]}>
+                    <Text style={{color: '#acadac'}}>{user.dateOfBirth ? user.dateOfBirth : 'Date of Birth'}</Text>
+                  </TouchableOpacity>
                   {isDatePickerVisible && (
                     <DateTimePickerModal 
                     isVisible = {isDatePickerVisible}
@@ -399,7 +439,7 @@ const submitData = async () => {
       <>
         <View style={{ margin: 5, flexDirection: 'row', alignItems: 'center', gap: 25 }}>
           {steps.map((step) => (
-            <Pressable
+            <TouchableOpacity
               key={step}
               onPress={() => {
                 if (!isStepValid(step)) {
@@ -425,7 +465,7 @@ const submitData = async () => {
               >
                 {step}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           ))}
         </View>
       </>
@@ -439,16 +479,16 @@ const submitData = async () => {
         <Text style={styles.headerText}>Sign Up</Text>
         {renderIndicator()}
         {renderInputs()}
-        <Pressable style={styles.button} onPress={handleNext}>
+        <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
             {currentStep < totalSteps ? 'Next' : 'Authenticate fingerprint'}
           </Text>
-        </Pressable>
+        </TouchableOpacity>
         <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', margin: 15 }}>
           <Text style={styles.textSmall}>Haven't registered?</Text>
-          <Pressable onPress={handleNavigation}>
+          <TouchableOpacity onPress={handleNavigation}>
             <Text style={[styles.textSmall, { color: '#0CEEF2' }]}>Click here</Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

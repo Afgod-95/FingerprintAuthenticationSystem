@@ -46,14 +46,20 @@ const fingerprintController = {
             fingerPrint
           } = req.body;
   
+          // Ensure that the request includes the fingerprint data
+          if (!fingerPrint) {
+            return res.status(400).json({
+              error: 'Fingerprint data is required',
+            });
+          }
+  
+          // Validate other fields
           if (!req.file){
             return res.status(400).json({
               error: "Profile picture required"
             })
           }
-
-          const profilePic = req.file.path
-          // Validation
+  
           if (!name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
             return res.status(400).json({
             error: 'All fields are required',
@@ -81,6 +87,7 @@ const fingerprintController = {
   
           // Hash the fingerprint data before saving
           const hashedFingerprint = crypto.createHash('sha256').update(fingerPrint).digest('hex');
+  
           // Check if the hashed fingerprint data already exists in the database
           const fingerPrintExist = await studentData.findOne({ fingerprint: hashedFingerprint });
           if (fingerPrintExist) {
@@ -89,7 +96,8 @@ const fingerprintController = {
             });
           }
   
-          // Save user registration details
+          // Save user registration details including the fingerprint data
+          const profilePic = req.file.path;
           const newStudent = new studentData({
             profilePic: fs.readFileSync(profilePic),
             name,
@@ -122,9 +130,8 @@ const fingerprintController = {
         });
       }
     },
-      //registration endPoint
-
-      login: async (req, res) => {
+    // Other controller methods
+    login: async (req, res) => {
         try {
           const { fingerPrintData } = req.body;
           if (!fingerPrintData) {
