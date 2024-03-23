@@ -13,7 +13,7 @@ const Login = () => {
       navigate.navigate('Register')
     }
 
-    const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
+    const backendURL = "https://fingerprintenabled.onrender.com/api/auth/login"
   
 
     const handleLogin = async () => {
@@ -33,16 +33,8 @@ const Login = () => {
         });
 
         if (result.success) {
-          await axios.post(backendURL, {
-            fingerprintData: result
-          }).then(res => {
-            console.log(res.data.message)
-            navigate.navigate('Home')
-          }).catch (error => {
-            console.log(error.message)
-          })
-         
-        } 
+          console.log(result.success)
+        }
         else {
           Alert.alert('Error', 'Fingerprint authentication failed');
         }

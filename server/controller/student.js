@@ -133,20 +133,20 @@ const fingerprintController = {
     // Other controller methods
     login: async (req, res) => {
         try {
-          const { fingerPrintData } = req.body;
-          if (!fingerPrintData) {
+          const { fingerprint } = req.body;
+          if (!fingerprint) {
             return res.status(400).json({
               error: 'Fingerprint required',
             });
           }
     
           // Hash the provided fingerprint data
-          const hashedFingerprint = crypto.createHash('sha256').update(fingerPrintData).digest('hex');
+          const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
     
           const exist = await studentData.findOne({ fingerprint: hashedFingerprint });
           if (!exist || exist.fingerprint !== hashedFingerprint) {
             return res.status(400).json({
-              error: 'Invalid fingerprint',
+              error: "Fingerprint doesn't match",
             });
           }
     
