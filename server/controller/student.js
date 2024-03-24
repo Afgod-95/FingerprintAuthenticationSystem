@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises; // Import fs with promises for asynchronous file reading
+const fs = require('fs').promises; // Change to use fs.promises to access asynchronous file system functions
 const emailFormat = /^[a-zA-Z0-9_.+]*[a-zA-Z][a-zA-Z0-9_.+]*@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const ghanaPhoneNumberRegex = /^0[23456789]([0-9]{8})$/;
 
