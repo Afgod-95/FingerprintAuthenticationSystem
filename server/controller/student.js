@@ -15,8 +15,13 @@ const generateToken = (userId) => {
 
 // Create the destination folder if it doesn't exist
 const destinationFolder = './image';
-if (!fs.existsSync(destinationFolder)) {
+try {
   fs.mkdirSync(destinationFolder);
+} catch (err) {
+  if (err.code !== 'EEXIST') {
+    console.error('Error creating destination folder:', err);
+    // Handle the error, perhaps by sending a 500 response
+  }
 }
 
 const storage = multer.diskStorage({
@@ -25,9 +30,13 @@ const storage = multer.diskStorage({
     cb(null, destinationFolder);
   },
   filename: (req, file, cb) => {
-    console.log(file);
-    const fileName = Date.now() + path.extname(file.originalname);
-    cb(null, fileName);
+    // Ensure file is available
+    if (!file) {
+      cb(new Error('No file received'), null);
+    } else {
+      const fileName = Date.now() + path.extname(file.originalname);
+      cb(null, fileName);
+    }
   }
 });
 
