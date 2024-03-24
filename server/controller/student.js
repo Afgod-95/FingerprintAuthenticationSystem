@@ -183,7 +183,6 @@ const fingerprintController = {
       });
     }
   },
-
 };
 
 module.exports = fingerprintController;
