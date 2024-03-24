@@ -114,69 +114,113 @@ const handleImagePickerResult = (result) => {
 
 
   // Data submission
-const submitData = async () => {
-  try {
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
-    if (!hasHardware) {
-      Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-      return;
-    }
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-    if (!isEnrolled) {
-      Alert.alert('Error', 'No fingerprint enrolled on this device.');
-      return;
-    }
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Authenticate with your fingerprint',
-    });
-
-    console.log('Fingerprint result:', JSON.stringify(result)); // Log fingerprint result as plain text
-
-    if (result.success) {
-      // Register user using his fingerprint data
-      const fingerPrint = result.success.toString(); // Get fingerprint data
-      console.log(`Fingerprint: ${fingerPrint}`);
-      const response = await axios.post(backendURL, {
-        name: user.name,
-        gender: user.gender,
-        dateOfBirth: user.dateOfBirth,
-        studentID: user.studentID,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        department: user.department,
-        faculty: user.faculty,
-        program: user.program,
-        level: user.level,
-        yearOfEnrollment: user.enrollmentYear,
-        fingerprint: fingerPrint 
+  const submitData = async () => {
+    try {
+      // Check if fingerprint authentication is supported and enrolled
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      if (!hasHardware) {
+        Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
+        return;
+      }
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!isEnrolled) {
+        Alert.alert('Error', 'No fingerprint enrolled on this device.');
+        return;
+      }
+  
+      // Authenticate user with fingerprint
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate with your fingerprint',
       });
-      if (response.error) {
-        Alert.alert('Error', response.error);
-        console.log(`Error: ${response.error.message}`)
-      } 
-      else if (response.status === 200) {
-        const { token } = response.data;
-        console.log(`token: ${token}`);
-        Alert.alert('Message', response.data.message);
-        console.log(response.data.message)
-        await AsyncStorage.setItem('userData', JSON.stringify(user));
-        await AsyncStorage.setItem('token', token); // Save the token in AsyncStorage
-        navigate.navigate('Home');
-      } 
-      {/*else {
-        console.error('Axios Request Failed. Response:', response);
-        Alert.alert('Error', `${response}`);
-      }*/}
+  
+      console.log('Fingerprint result:', JSON.stringify(result));
+  
+      if (result.success) {
+        const fingerPrint = result.success.toString();
+  
+        {/*// Create FormData object
+        const formData = new FormData();
+  
+        // Append image file to FormData if user profile is not empty
+        if (user.profile) {
+          const localUri = user.profile;
+          const filename = localUri.split('/').pop();
+          const match = /\.(\w+)$/.exec(filename);
+          const type = match ? `image/${match[1]}` : `image`;
+  
+          formData.append('profilePic', { uri: localUri, name: filename, type });
+        }
+  
+        // Append other form data
+        formData.append('name', user.name);
+        formData.append('gender', user.gender);
+        formData.append('dateOfBirth', user.dateOfBirth);
+        formData.append('studentID', user.studentID);
+        formData.append('email', user.email);
+        formData.append('phoneNumber', user.phoneNumber);
+        formData.append('department', user.department);
+        formData.append('faculty', user.faculty);
+        formData.append('program', user.program);
+        formData.append('level', user.level);
+        formData.append('yearOfEnrollment', user.enrollmentYear);
+        formData.append('fingerprint', fingerPrint);
+      */}
+      
+        const requestData = {
+          profilePic: user.profile,
+          name: user.name,
+          gender: user.gender,
+          dateOfBirth: user.dateOfBirth,
+          studentID: user.studentID,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          department: user.department,
+          faculty: user.faculty,
+          program: user.program,
+          level: user.level,
+          yearOfEnrollment: user.enrollmentYear,
+          fingerprint: fingerPrint,
+        }
+        // Make the POST request with axios
+        const response = await axios.post(backendURL, requestData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+  
+        if (response.status === 200) {
+          const { token } = response.data;
+          console.log(`Request data: ${JSON.stringify(requestData)}`);
+          console.log(`token: ${token}`);
+          Alert.alert('Message', response.data.message);
+          console.log(response.data.message);
+          await AsyncStorage.setItem('userData', JSON.stringify(user));
+          await AsyncStorage.setItem('token', token);
+          navigate.navigate('Home');
+         
+        } else if (response.data.error) {
+
+          Alert.alert('Error', response.data.error);
+          console.log(`Error: ${response.data.error}`);
+        }
+      } else {
+        Alert.alert('Error', 'Fingerprint authentication failed');
+      }
     } 
-    else {
-      Alert.alert('Error', 'Fingerprint authentication failed');
+    catch (error) {
+      {/*if (error.response) {
+        console.log(error.response.data);
+        Alert.alert('Error', error.response.data.error);
+      }*/}  if (error) {
+        console.log('Request made but no response received.');
+      } else {
+        console.log('Error:', error.message);
+        Alert.alert('An error occurred while registering');
+      }
     }
-  } catch (error) {
-    console.log('Error:', error.message);
-    console.log(error)
-    Alert.alert('Error',error.message);
-  }
-};
+
+  };
+  
 
 
   const handleNext = () => {

@@ -47,11 +47,12 @@ const fingerprintController = {
         } = req.body;
   
         // Ensure that the request includes the fingerprint data
-        if (!fingerPrint) {
+         /*if (!fingerPrint) {
           return res.status(400).json({
             error: 'Fingerprint data is required',
           });
         }
+        */
   
         // Validate other fields
         if (!req.file){
