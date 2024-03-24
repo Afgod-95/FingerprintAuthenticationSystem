@@ -138,7 +138,7 @@ const handleImagePickerResult = (result) => {
       if (result.success) {
         const fingerPrint = result.success.toString();
   
-        {/*// Create FormData object
+        // Create FormData object
         const formData = new FormData();
   
         // Append image file to FormData if user profile is not empty
@@ -161,11 +161,10 @@ const handleImagePickerResult = (result) => {
         formData.append('department', user.department);
         formData.append('faculty', user.faculty);
         formData.append('program', user.program);
-        formData.append('level', user.level);
-        formData.append('yearOfEnrollment', user.enrollmentYear);
+        formData.append('level', parseInt(user.level));
+        formData.append('yearOfEnrollment', parseInt(user.yearOfEnrollment));
         formData.append('fingerprint', fingerPrint);
-      */}
-      
+  
         const requestData = {
           profilePic: user.profile,
           name: user.name,
@@ -177,18 +176,21 @@ const handleImagePickerResult = (result) => {
           department: user.department,
           faculty: user.faculty,
           program: user.program,
-          level: user.level,
-          yearOfEnrollment: user.enrollmentYear,
+          level: parseInt(user.level),
+          yearOfEnrollment: parseInt(user.enrollmentYear),
           fingerprint: fingerPrint,
-        }
+        };
         // Make the POST request with axios
-        const response = await axios.post(backendURL, requestData, {
+        const response = await axios.post(backendURL, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
   
-        if (response.status === 200) {
+        if (response.data.error) {
+          Alert.alert('Error', response.data.error);
+          console.log(`Error: ${response.data.error}`);
+        } else if (response.status === 200) {
           const { token } = response.data;
           console.log(`Request data: ${JSON.stringify(requestData)}`);
           console.log(`token: ${token}`);
@@ -197,29 +199,23 @@ const handleImagePickerResult = (result) => {
           await AsyncStorage.setItem('userData', JSON.stringify(user));
           await AsyncStorage.setItem('token', token);
           navigate.navigate('Home');
-         
-        } else if (response.data.error) {
-
-          Alert.alert('Error', response.data.error);
-          console.log(`Error: ${response.data.error}`);
         }
       } else {
         Alert.alert('Error', 'Fingerprint authentication failed');
       }
-    } 
-    catch (error) {
-      {/*if (error.response) {
+    } catch (error) {
+      if (error.response) {
         console.log(error.response.data);
         Alert.alert('Error', error.response.data.error);
-      }*/}  if (error) {
+      } else if (error.request) {
         console.log('Request made but no response received.');
       } else {
         console.log('Error:', error.message);
         Alert.alert('An error occurred while registering');
       }
     }
-
   };
+  
   
 
 
