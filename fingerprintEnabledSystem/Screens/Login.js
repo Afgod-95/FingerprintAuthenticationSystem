@@ -19,22 +19,24 @@ const Login = () => {
       try {
         const response = await axios.post(backendURL, {
           fingerprint: fingerprint
-        })  // Submit data to the
-        if (response.data.error){
-          Alert.alert('Error', `${response.data.error}`);
+        });
+    
+        if (response.data.error) {
+          Alert.alert('Error', response.data.error);
           console.error(response.data.error);
-        }
+        } 
         else if (response.status === 200) {
-          console.error(response.data.mesage);
-          Alert.alert('Success');
+          Alert.alert('Success', response.data.message);
+          console.log(response.data.token);
+          navigate.navigate('Home')
         }
-        
-      } 
-      catch (error) {
-        console.log(error.message)
-        Alert.alert(error.message)
+    
+      } catch (error) {
+        console.log(error.message);
+        Alert.alert('Error', error.message);
       }
     }
+    
 
     const handleLogin = async () => {
       try {
