@@ -19,6 +19,7 @@ const destinationFolder = 'E:/Native/FingerprintSystem/server/image'; // Use for
 async function createDirectory() {
   try {
     await fs.mkdir(destinationFolder, { recursive: true }); // Use { recursive: true } to create nested directories if needed
+    console.log(destinationFolder)
     console.log('Directory created successfully.');
   } catch (err) {
     if (err.code !== 'EEXIST') {
@@ -69,9 +70,12 @@ const fingerprintController = {
                     faculty,
                     program,
                     level,
-                    yearOfEnrollment,
-                    fingerPrint
+                    yearOfEnrollment
                 } = req.body;
+
+                const fingerprint = req.body.fingerprint || '';
+
+                console.log(typeof fingerprint)
 
                 if (!req.file) {
                     return res.status(400).json({
@@ -124,6 +128,7 @@ const fingerprintController = {
                     return res.status(400).json({ error: 'Failed to read profile picture data' });
                 }
                 const base64Image = profilePicData.toString('base64'); // Convert profile picture data to base64
+                console.log(typeof base64Image)
                 const newStudent = new studentData({
                   profilePic: base64Image,
                   name,
