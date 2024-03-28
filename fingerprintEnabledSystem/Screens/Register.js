@@ -59,8 +59,7 @@ const Register = () => {
     hideDatePicker();
   };
   
-  
-  
+
 
 
   // Image Picker
@@ -162,7 +161,7 @@ const handleImagePickerResult = (result) => {
         formData.append('faculty', user.faculty);
         formData.append('program', user.program);
         formData.append('level', parseInt(user.level));
-        formData.append('yearOfEnrollment', parseInt(user.yearOfEnrollment));
+        formData.append('yearOfEnrollment', parseInt(user.enrollmentYear));
         formData.append('fingerprint', fingerPrint);
   
         const requestData = {
@@ -190,14 +189,25 @@ const handleImagePickerResult = (result) => {
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error}`);
-        } else if (response.status === 200) {
+        } 
+        else if (response.status === 200) {
+          console.log("Navigating to home screen")
           const { token } = response.data;
           console.log(`Request data: ${JSON.stringify(requestData)}`);
           console.log(`token: ${token}`);
+          if (token) {
+            await AsyncStorage.setItem('userData', JSON.stringify(user));
+            await AsyncStorage.setItem('token', token);  
+            navigate.navigate('Home');
+          } 
+          else {
+            console.log('Error: Token is undefined or null');
+            Alert.alert('Error', 'Token is undefined or null');
+          }
           Alert.alert('Message', response.data.message);
           console.log(response.data.message);
           await AsyncStorage.setItem('userData', JSON.stringify(user));
-          await AsyncStorage.setItem('token', token);
+          await AsyncStorage.setItem('token', token);          
           navigate.navigate('Home');
         }
       } else {

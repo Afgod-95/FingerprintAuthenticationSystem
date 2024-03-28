@@ -150,6 +150,8 @@ const fingerprintController = {
 
               res.status(200).json({ success: true, message: 'Registration successful', newStudent });
               console.log('Registration successful', newStudent);
+              const token = generateToken(exist._id);
+              res.status(200).json({ success: true, token });
             } 
             catch (error) {
               console.error(`Error: ${error.message}`);
