@@ -125,9 +125,10 @@ const fingerprintController = {
           // Read the file asynchronously and save user registration details including the fingerprint data
           const profilePicPath = req.file.path;
           const profilePicData = await fs.readFile(profilePicPath);
-
+          console.log(req.body, profilePicData);
+          const base64Image = new Buffer(profilePicData).toString('base64');
           const newStudent = new studentData({
-            profilePic: profilePicData,
+            profilePic: base64Image,
             name,
             gender,
             dateOfBirth,
