@@ -4,7 +4,8 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
-const fs = require('node:fs').promises;
+const fs = require('fs').promises; // Change from 'node:fs' to 'fs'
+
 const emailFormat = /^[a-zA-Z0-9_.+]*[a-zA-Z][a-zA-Z0-9_.+]*@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const ghanaPhoneNumberRegex = /^0[23456789]([0-9]{8})$/;
 
@@ -14,10 +15,10 @@ const generateToken = (userId) => {
 };
 
 // Create the destination folder if it doesn't exist
-const destinationFolder = 'E:\Native\FingerprintSystem\server\image'
+const destinationFolder = 'E:/Native/FingerprintSystem/server/image'; // Use forward slashes or double backslashes
 async function createDirectory() {
   try {
-    await fs.mkdir(destinationFolder);
+    await fs.mkdir(destinationFolder, { recursive: true }); // Use { recursive: true } to create nested directories if needed
     console.log('Directory created successfully.');
   } catch (err) {
     if (err.code !== 'EEXIST') {
@@ -29,15 +30,11 @@ async function createDirectory() {
 // Call the async function to create the directory
 createDirectory();
 
-
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // file location
     cb(null, destinationFolder);
   },
   filename: (req, file, cb) => {
-    // Ensure file is available
     if (!file) {
       cb(new Error('No file received'), null);
     } else {
@@ -47,25 +44,18 @@ const storage = multer.diskStorage({
   }
 });
 
-//image uploader
 const upload = multer({ storage: storage });
 
 const fingerprintController = {
-  //registration start point 
   register: async (req, res) => {
     try {
-      // Use the upload middleware to handle file uploads for a single file with the field name 'profilePic'
       upload.single('profilePic')(req, res, async (err) => {
         if (err) {
           console.error('Error uploading file:', err);
           return res.status(500).json({ error: 'Failed to upload file' });
         }
 
-        const profilePicPath = req.file.path; // Assuming req.file.path is correctly set
-
-
-
-        // File uploaded successfully, continue with registration logic
+        const profilePicPath = req.file ? req.file.path : null; // Check if file is uploaded
 
         try {
           const {
@@ -83,13 +73,13 @@ const fingerprintController = {
             fingerPrint
           } = req.body;
 
-          // Validate other fields
           if (!req.file) {
             return res.status(400).json({
               error: "Profile picture required"
             });
           }
 
+          // Validate other fields
           if (!name || !gender || !dateOfBirth || !studentID || !email || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
             return res.status(400).json({
               error: 'All fields are required',
@@ -126,7 +116,6 @@ const fingerprintController = {
             });
           }
 
-          // Read the file asynchronously and save user registration details including the fingerprint data
           if (!profilePicPath) {
             return res.status(400).json({ error: 'Profile picture path is missing' });
           }
@@ -146,7 +135,7 @@ const fingerprintController = {
             level,
             yearOfEnrollment,
             fingerPrintData: true,
-            fingerprint: hashedFingerprint, // Store hashed fingerprint data
+            fingerprint: hashedFingerprint,
           });
 
           await newStudent.save();
@@ -156,7 +145,6 @@ const fingerprintController = {
         }
         catch (error) {
           console.error(`Error: ${error.message}`);
-          console.error(`Error reading profile picture: ${error.message}`);
           res.status(500).json({
             error: 'Internal Server Error',
           });
@@ -170,7 +158,6 @@ const fingerprintController = {
       });
     }
   },
-  // Other controller methods
   login: async (req, res) => {
     try {
       const { fingerprint } = req.body;
