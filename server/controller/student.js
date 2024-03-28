@@ -61,6 +61,10 @@ const fingerprintController = {
           return res.status(500).json({ error: 'Failed to upload file' });
         }
 
+        const profilePicPath = req.file.path; // Assuming req.file.path is correctly set
+
+
+
         // File uploaded successfully, continue with registration logic
 
         try {
@@ -123,10 +127,11 @@ const fingerprintController = {
           }
 
           // Read the file asynchronously and save user registration details including the fingerprint data
-          const profilePicPath = req.file.path;
+          if (!profilePicPath) {
+            return res.status(400).json({ error: 'Profile picture path is missing' });
+          }
           const profilePicData = await fs.readFile(profilePicPath);
-          console.log(req.body, profilePicData);
-          const base64Image = new Buffer(profilePicData).toString('base64');
+          const base64Image = Buffer.from(profilePicData).toString('base64');
           const newStudent = new studentData({
             profilePic: base64Image,
             name,
@@ -151,6 +156,7 @@ const fingerprintController = {
         }
         catch (error) {
           console.error(`Error: ${error.message}`);
+          console.error(`Error reading profile picture: ${error.message}`);
           res.status(500).json({
             error: 'Internal Server Error',
           });
