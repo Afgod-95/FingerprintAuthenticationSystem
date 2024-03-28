@@ -110,7 +110,7 @@ const fingerprintController = {
                 }
 
                 // Hash the fingerprint data before saving
-                const hashedFingerprint = crypto.createHash('sha256').update(fingerPrint).digest('hex');
+                const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
 
                 // Check if the hashed fingerprint data already exists in the database
                 const fingerPrintExist = await studentData.findOne({ fingerprint: hashedFingerprint });
@@ -128,7 +128,7 @@ const fingerprintController = {
                     return res.status(400).json({ error: 'Failed to read profile picture data' });
                 }
                 const base64Image = profilePicData.toString('base64'); // Convert profile picture data to base64
-                console.log(typeof base64Image)
+                console.log(`ProfileImage: ${base64Image}`)
                 const newStudent = new studentData({
                   profilePic: base64Image,
                   name,
