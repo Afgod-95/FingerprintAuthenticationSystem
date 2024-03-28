@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises; // Change to use fs.promises to access asynchronous file system functions
+const fs = require('node:fs').promises;
 const emailFormat = /^[a-zA-Z0-9_.+]*[a-zA-Z][a-zA-Z0-9_.+]*@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const ghanaPhoneNumberRegex = /^0[23456789]([0-9]{8})$/;
 
@@ -14,15 +14,22 @@ const generateToken = (userId) => {
 };
 
 // Create the destination folder if it doesn't exist
-const destinationFolder = './image';
-try {
-  fs.mkdirSync(destinationFolder);
-} catch (err) {
-  if (err.code !== 'EEXIST') {
-    console.error('Error creating destination folder:', err);
-    // Handle the error, perhaps by sending a 500 response
+const destinationFolder = 'E:\Native\FingerprintSystem\server\image'
+async function createDirectory() {
+  try {
+    await fs.mkdir(destinationFolder);
+    console.log('Directory created successfully.');
+  } catch (err) {
+    if (err.code !== 'EEXIST') {
+      console.error('Error creating destination folder:', err);
+    }
   }
 }
+
+// Call the async function to create the directory
+createDirectory();
+
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
