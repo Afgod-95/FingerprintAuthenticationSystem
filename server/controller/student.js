@@ -163,42 +163,42 @@ const fingerprintController = {
     }
 },
 
-  login: async (req, res) => {
-    try {
-      const { fingerprint, email, password } = req.body;
-      if (!fingerprint) {
-        return res.status(401).json({
-          error: 'Fingerprint required',
-        });
-      }
-
-      // Get user by email
-      const existUser = await studentData.findOne({ email });
-      if (existUser){
-        return res.status(401).json({
-          error: "Email already exist"
-        })
-      }
-      const passwordMatch = await bcrypt.compare(password, existUser.password);
-
-      if (!passwordMatch) {
-          return res.status(401).json({
-            error: 'Invalid password',
-          });
-      }
-
-      // Hash the provided fingerprint data
-      const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
-      const exist = await studentData.findOne({ fingerprint: hashedFingerprint });
-      const token = generateToken(exist._id);
-      res.status(200).json({ success: true, token });
-    } catch (error) {
-      console.error(`Error: ${error.message}`);
-      res.status(500).json({
-        error: error.message,
+login: async (req, res) => {
+  try {
+    const { fingerprint, email, password } = req.body;
+    if (!email || !password){
+      return res.status(400).json({ 
+        error: "Please enter all fields"
       });
     }
-  },
+    // Get user by email
+    const existUser = await studentData.findOne({ email });
+    if (!existUser) {
+      return res.status(401).json({
+        error: "User not found",
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, existUser.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        error: 'Invalid password',
+      });
+    }
+
+    // Hash the provided fingerprint data
+    const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
+    const exist = await studentData.findOne({ fingerprint: hashedFingerprint });
+    const token = generateToken(exist._id);
+    res.status(200).json({ success: true, token });
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+},
 };
 
 module.exports = fingerprintController;
