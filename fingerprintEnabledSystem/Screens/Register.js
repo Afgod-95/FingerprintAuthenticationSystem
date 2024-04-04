@@ -1,6 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { View, Text, KeyboardAvoidingView, StyleSheet, Image, TextInput, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, KeyboardAvoidingView,
+   StyleSheet, Image, TextInput, TouchableOpacity, 
+   Platform, Alert, Animated, Modal, Dimensions, ScrollView
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -8,14 +11,15 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import axios from 'axios'
+
+import RadioButton from '../component/RadioButton';
 
 const Register = () => {
   const [user, setUser] = useState({
     profile: '',
     name: '',
-    gender: '',
+    gender: selectedOption,
     dateOfBirth: '',
     studentID: '',
     email: '',
@@ -26,6 +30,29 @@ const Register = () => {
     level: '',
     enrollmentYear: '',
   });
+
+  const [selectedOption, setSelectedOption] = useState('Male');
+
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option);
+  };
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const modalAnimatedValue = useRef(new Animated.Value(0)).current;
+
+  const handleDepartmentSelect = (department) => {
+    setUser({ ...user, department });
+    setModalVisible(false);
+  };
+
+  const animateModal = (toValue) => {
+    Animated.timing(modalAnimatedValue, {
+      toValue,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
 
   const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
   
@@ -39,6 +66,8 @@ const Register = () => {
   const handleNavigation = () => {
     navigate.navigate('Login');
   };
+
+  
 
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false)
 
@@ -219,9 +248,9 @@ const handleImagePickerResult = (result) => {
         Alert.alert('Error', error.response.data.error);
       } else if (error.request) {
         console.log('Request made but no response received.');
-      } else {
-        console.log('Error:', error.message);
-        Alert.alert('An error occurred while registering');
+      } 
+      else if (error.message){
+        console.log(error.message);
       }
     }
   };
@@ -286,32 +315,25 @@ const handleImagePickerResult = (result) => {
     }
   };
   
+  const departments = [
+  "Dept. of Mechanical Engineering",
+  "Dept. of Electrical/Electronic Engineering",
+  "Dept. of Civil Engineering",
+  "Dept. of Interior Design and Upholstery Technology",
+  "Dept. of Building Technology",
+  "Dept. of Applied Mathematics and Statistics",
+  "Dept. of Science Laboratory Technology",
+  "Dept. of Computer Science",
+  "Dept. of Medical Laboratory Technology",
+  "Dept. of Hotel Catering & Institutional Management (HCIM)",
+  "Dept. of Fashion Design & Textile Department",
+  "Dept. of Liberal Studies and Communications Technology ",
+  "Dept. of Accountancy and Finance",
+  "Dept. of Management and Public Administration",
+  "Dept. of Procurement and Supply Chain Management",
+  "Dept. of Marketing",
+  ];
   
-  //Bottom sheet
-  const bottomSheetRef = useRef(true)
-  const handleDepartmentSelect = (department) => {
-    setUser({ ...user, department });
-    bottomSheetRef.current.close(); // Close bottom sheet after selection
-  };
-
-  const renderBackdrop = useCallback((props) => {
-    return <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={2} />;
-  }, []);
-
-
-  const departments = ['Department 1', 'Department 2', 'Department 3', 'Department 4'];
-  // Render department items
-  const renderDepartmentItems = () => {
-    return departments.map((department) => (
-      <TouchableOpacity
-        key={department}
-        style={styles.departmentItem}
-        onPress={() => handleDepartmentSelect(department)}
-      >
-        <Text style={styles.departmentText}>{department}</Text>
-      </TouchableOpacity>
-    ));
-  };
 
   // Rendering inputs
   const renderInputs = () => {
@@ -358,13 +380,24 @@ const handleImagePickerResult = (result) => {
                 value={user.name}
                 onChangeText={(text) => setUser({ ...user, name: text })}
               />
-              <TextInput
-                style={[styles.input, { margin: 15 }]}
-                placeholder="Gender"
-                placeholderTextColor="#acadac"
-                value={user.gender}
-                onChangeText={(text) => setUser({ ...user, gender: text })}
-              />
+              
+              
+              <View style = {[styles.input, {flexDirection: 'row', gap: 50, alignItems: 'center'}]}>
+                <Text style = {styles.textSmall}>Gender</Text>
+                <RadioButton
+                  label="Male"
+                  labelColor={'#fff'}
+                  selected={selectedOption === 'Male'}
+                  onPress={() => handleOptionSelect('Male')}
+                />
+                <RadioButton
+                  label="Female"
+                  labelColor={'#fff'}
+                  selected={selectedOption === 'Female'}
+                  onPress={() => handleOptionSelect('Female')}
+                />
+              </View>
+              
 
               {Platform.OS === 'ios' ? (
               <DateTimePickerModal 
@@ -428,15 +461,7 @@ const handleImagePickerResult = (result) => {
           <>
             <View>
               <Text style={[styles.textMedium, { color: '#acadac', marginLeft: 20 }]}>Academic Details</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Department"
-                placeholderTextColor="#acadac"
-                value={user.department}
-                onChangeText={(text) => setUser({ ...user, department: text })}
-                onFocus={() => bottomSheetRef.current.expand()}
-              />
-
+              
               <TextInput
                 style={styles.input}
                 placeholder="Faculty"
@@ -444,6 +469,54 @@ const handleImagePickerResult = (result) => {
                 value={user.faculty}
                 onChangeText={(text) => setUser({ ...user, faculty: text })}
               />
+
+              <TouchableOpacity onPress={() => setModalVisible(true)}  style={[styles.input, {justifyContent: 'center'}]}>
+                <Text style = {{color: '#acadac', justifyContent: 'center'}}>{"Select department" ? `Department: ${user.department}` : null}</Text>
+              </TouchableOpacity>
+
+              <Modal
+                transparent
+                visible={modalVisible}
+                animationType="slide"
+                onRequestClose={() => setModalVisible(false)}
+              >
+                <View style={styles.modalContainer}>
+                  <Animated.View
+                    style={[
+                      styles.modalContent, {paddingBottom: 15, paddingRight: 5},
+                      {
+                        transform: [
+                          {
+                            translateY: modalAnimatedValue.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [500, 0],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                     <ScrollView showsVerticalScrollIndicator={false}>
+                      <View style = {{margin: 15}}>
+                        {departments.map((department) => (
+                          <TouchableOpacity
+                          key={department}
+                          style = {{marginVertical: 5}}
+                          onPress={() => handleDepartmentSelect(department)}
+                          >
+                            <RadioButton
+                              label={department}
+                              selected={department === user.department}
+                              onPress={() => handleDepartmentSelect(department)}
+                            />
+                          </TouchableOpacity> 
+                        ))}
+                      </View>
+                      
+                    </ScrollView>
+                  </Animated.View>
+                </View>
+              </Modal>
 
               <TextInput
                 style={styles.input}
@@ -466,13 +539,6 @@ const handleImagePickerResult = (result) => {
                 value={user.enrollmentYear}
                 onChangeText={(text) => setUser({ ...user, enrollmentYear: text })}
               />
-
-              <BottomSheet ref={bottomSheetRef} snapPoints={['25%', '50%', '75%']}>
-                <View style={styles.bottomSheetContent}>
-                  <Text style={styles.bottomSheetHeader}>Select Department</Text>
-                  {renderDepartmentItems()}
-                </View>
-              </BottomSheet>
             </View>
           </>
         );
@@ -615,6 +681,23 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
   },
+  modalContainer: {
+    flex: 1,
+    alignItems: 'center',
+    top: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    marginVertical: 10,
+    borderRadius: 10,
+    elevation: 5,
+    position: 'absolute',
+    width: '100%',
+    height: Dimensions.get('window').height/2,
+  },
+ 
 });
 
 export default Register;

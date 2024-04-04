@@ -19,9 +19,6 @@ const Home = () => {
     const [level, setLevel] = useState(null);
     const [enrollmentYear, setEnrollmentYear] = useState(null);
     
-    const handleNavigation = () => {
-      navigate.navigate('Register')
-    }
     const fetchData = async () => {
       try{
         setProfile(await AsyncStorage.getItem('profile'))
