@@ -12,7 +12,8 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import  Feather from '@expo/vector-icons/Feather'; 
-
+import { Picker } from '@react-native-picker/picker'
+import { departments, faculty, level, getDate } from '../UserData';
 import RadioButton from '../component/RadioButton';
 
 const Register = () => {
@@ -188,6 +189,7 @@ const handleImagePickerResult = (result) => {
         formData.append('dateOfBirth', user.dateOfBirth);
         formData.append('studentID', user.studentID);
         formData.append('email', user.email);
+        formData.append('password', user.password);
         formData.append('phoneNumber', user.phoneNumber);
         formData.append('department', user.department);
         formData.append('faculty', user.faculty);
@@ -203,6 +205,7 @@ const handleImagePickerResult = (result) => {
           dateOfBirth: user.dateOfBirth,
           studentID: user.studentID,
           email: user.email,
+          password: user.password,
           phoneNumber: user.phoneNumber,
           department: user.department,
           faculty: user.faculty,
@@ -318,26 +321,7 @@ const handleImagePickerResult = (result) => {
     }
   };
   
-  const departments = [
-    "Dept. of Mechanical Engineering",
-    "Dept. of Electrical/Electronic Engineering",
-    "Dept. of Civil Engineering",
-    "Dept. of Interior Design and Upholstery Technology",
-    "Dept. of Building Technology",
-    "Dept. of Applied Mathematics and Statistics",
-    "Dept. of Science Laboratory Technology",
-    "Dept. of Computer Science",
-    "Dept. of Medical Laboratory Technology",
-    "Dept. of Hotel Catering & Institutional Management (HCIM)",
-    "Dept. of Fashion Design & Textile Department",
-    "Dept. of Liberal Studies and Communications Technology ",
-    "Dept. of Accountancy and Finance",
-    "Dept. of Management and Public Administration",
-    "Dept. of Procurement and Supply Chain Management",
-    "Dept. of Marketing",
-  ];
   
-
   // Rendering inputs
   const renderInputs = () => {
     switch (currentStep) {
@@ -486,13 +470,16 @@ const handleImagePickerResult = (result) => {
             <View>
               <Text style={[styles.textMedium, { color: '#acadac', marginLeft: 20 }]}>Academic Details</Text>
               
-              <TextInput
-                style={styles.input}
-                placeholder="Faculty"
-                placeholderTextColor="#acadac"
-                value={user.faculty}
-                onChangeText={(text) => setUser({ ...user, faculty: text })}
-              />
+              <Picker
+                selectedValue={user.faculty}
+                onValueChange={(itemValue, itemIndex) =>
+                    setUser({...user, faculty: itemValue})
+                }>
+                {faculty.map(item => (
+                    <Picker.Item label={item} value={item} key={item} />
+                ))}
+              </Picker>
+
 
               <TouchableOpacity onPress={() => setModalVisible(true)}  style={[styles.input, {justifyContent: 'center'}]}>
                 <Text style = {{color: '#acadac', justifyContent: 'center'}}>{"Select department" ? `Department: ${user.department}` : null}</Text>

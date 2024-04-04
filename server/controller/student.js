@@ -179,7 +179,7 @@ const fingerprintController = {
           error: "Email already exist"
         })
       }
-      const passwordMatch = await bcrypt.compare(password, user.password);
+      const passwordMatch = await bcrypt.compare(password, existUser.password);
 
       if (!passwordMatch) {
           return res.status(401).json({
