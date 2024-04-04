@@ -6,12 +6,12 @@ import { View, Text, KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Feather } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
+import  Feather from '@expo/vector-icons/Feather'; 
 
 import RadioButton from '../component/RadioButton';
 
@@ -23,6 +23,7 @@ const Register = () => {
     dateOfBirth: '',
     studentID: '',
     email: '',
+    password: '',
     phoneNumber: '',
     department: '',
     faculty: '',
@@ -30,6 +31,8 @@ const Register = () => {
     level: '',
     enrollmentYear: '',
   });
+
+  const [isVisible, setIsVisible] = useState(false)
 
   const [selectedOption, setSelectedOption] = useState('Male');
 
@@ -316,22 +319,22 @@ const handleImagePickerResult = (result) => {
   };
   
   const departments = [
-  "Dept. of Mechanical Engineering",
-  "Dept. of Electrical/Electronic Engineering",
-  "Dept. of Civil Engineering",
-  "Dept. of Interior Design and Upholstery Technology",
-  "Dept. of Building Technology",
-  "Dept. of Applied Mathematics and Statistics",
-  "Dept. of Science Laboratory Technology",
-  "Dept. of Computer Science",
-  "Dept. of Medical Laboratory Technology",
-  "Dept. of Hotel Catering & Institutional Management (HCIM)",
-  "Dept. of Fashion Design & Textile Department",
-  "Dept. of Liberal Studies and Communications Technology ",
-  "Dept. of Accountancy and Finance",
-  "Dept. of Management and Public Administration",
-  "Dept. of Procurement and Supply Chain Management",
-  "Dept. of Marketing",
+    "Dept. of Mechanical Engineering",
+    "Dept. of Electrical/Electronic Engineering",
+    "Dept. of Civil Engineering",
+    "Dept. of Interior Design and Upholstery Technology",
+    "Dept. of Building Technology",
+    "Dept. of Applied Mathematics and Statistics",
+    "Dept. of Science Laboratory Technology",
+    "Dept. of Computer Science",
+    "Dept. of Medical Laboratory Technology",
+    "Dept. of Hotel Catering & Institutional Management (HCIM)",
+    "Dept. of Fashion Design & Textile Department",
+    "Dept. of Liberal Studies and Communications Technology ",
+    "Dept. of Accountancy and Finance",
+    "Dept. of Management and Public Administration",
+    "Dept. of Procurement and Supply Chain Management",
+    "Dept. of Marketing",
   ];
   
 
@@ -446,6 +449,27 @@ const handleImagePickerResult = (result) => {
                 value={user.email}
                 onChangeText={(text) => setUser({ ...user, email: text })}
               />
+              <View>
+                <TextInput
+                  style={[styles.input, { margin: 15 }]}
+                  placeholder="Password"
+                  secureTextEntry={!isVisible}
+                  placeholderTextColor="#acadac"
+                  value={user.password}
+                  onChangeText={(text) => setUser({ ...user, password: text })}
+                />
+                <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
+                  style = {{
+                    position: 'absolute',
+                    right: 10, top: 25,
+                    height: 40, 
+                    width: 40
+                  }}
+                >
+                  <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
+                </TouchableOpacity>
+              </View>
+              
               <TextInput
                 style={[styles.input, { margin: 15 }]}
                 placeholder="Phone Number"

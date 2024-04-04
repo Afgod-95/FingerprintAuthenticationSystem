@@ -1,13 +1,19 @@
 import { useNavigation } from '@react-navigation/native'
-import React from 'react'
-import { View, Text, KeyboardAvoidingView, StyleSheet, Image, Pressable, Alert } from 'react-native'
+import React, { useState } from 'react'
+import { View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, StyleSheet, Image, Pressable, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as LocalAuthentication from 'expo-local-authentication'
 import axios from 'axios'
+import { Feather } from '@expo/vector-icons'
 
 const Login = () => {
     const fingerPrintImage = require('../assets/finger.png')
     const navigate = useNavigation()
+    const [isVisible, setIsVisible] = useState(false)
+    const [user, setUser] = useState({
+      email: '',
+      password:''
+    })
 
     const handleNavigation = () => {
       navigate.navigate('Register')
@@ -15,10 +21,12 @@ const Login = () => {
 
     const backendURL = "https://fingerprintenabled.onrender.com/api/auth/login"
   
-    const userLogin = async (fingerprint) => {
+    const userLogin = async (fingerprint, userData) => {
       try {
         const response = await axios.post(backendURL, {
-          fingerprint: fingerprint
+          fingerprint: fingerprint,
+          email: userData.email,
+          password: userData.password
         });
     
         if (response.data.error) {
@@ -57,7 +65,7 @@ const Login = () => {
         if (result.success) {
           const fingerprintData = result.success.toString();
           console.log(typeof fingerprintData);
-          userLogin(fingerprintData); // Send fingerprint data directly as a string
+          userLogin(fingerprintData, user); // Send fingerprint data directly as a string
         } else {
           Alert.alert('Error', 'Fingerprint authentication failed');
         }
@@ -75,6 +83,37 @@ const Login = () => {
             <View style = {{margin: 20}}>
                 <Text style = {styles.textMedium}>Fingerprint Auth</Text>
                 <Text style = {styles.textSmall}>Authenticate using your fingerprint</Text>
+            </View>
+
+            <View>
+            <TextInput
+                style={[styles.input, { margin: 15 }]}
+                placeholder="Email"
+                placeholderTextColor="#acadac"
+                value={user.email}
+                onChangeText={(text) => setUser({ ...user, email: text })}
+              />
+              <View>
+                <TextInput
+                  style={[styles.input, { margin: 15 }]}
+                  placeholder="Password"
+                  secureTextEntry={!isVisible}
+                  placeholderTextColor="#acadac"
+                  value={user.password}
+                  onChangeText={(text) => setUser({ ...user, password: text })}
+                />
+                <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
+                  style = {{
+                    position: 'absolute',
+                    right: 10, top: 25,
+                    height: 40, 
+                    width: 40
+                  }}
+                >
+                  <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
+                </TouchableOpacity>
+              </View>
+              
             </View>
             
             <Pressable style = {styles.button} onPress={handleLogin}>
@@ -121,6 +160,17 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 18,
         textAlign: 'center',
+    },
+
+    input: {
+      borderWidth: 0.5,
+      margin: 10,
+      width: 350,
+      height: 50,
+      borderColor: '#0CEEF2',
+      borderRadius: 20,
+      padding: 10,
+      color: '#fff',
     },
     
     image: {
