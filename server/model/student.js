@@ -49,7 +49,7 @@ const studentSchema = new mongoose.Schema({
         required: true
     },
     yearOfEnrollment: {
-        type: Number,
+        type: Date,
         required: true
     },
     fingerPrintData: {

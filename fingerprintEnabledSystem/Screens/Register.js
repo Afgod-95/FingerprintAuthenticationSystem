@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import  Feather from '@expo/vector-icons/Feather'; 
 import { Picker } from '@react-native-picker/picker'
-import { departments, faculty, level, getDate } from '../UserData';
+import { departments, faculties, genders, levels, getDate } from '../UserData';
 import RadioButton from '../component/RadioButton';
 
 const Register = () => {
@@ -32,6 +32,18 @@ const Register = () => {
     level: '',
     enrollmentYear: '',
   });
+
+  const pickerRef = useRef();
+
+  function open() {
+    pickerRef.current.focus();
+  }
+
+  function close() {
+    pickerRef.current.blur();
+  }
+
+  const datesArray = getDate()
 
   const [isVisible, setIsVisible] = useState(false)
 
@@ -369,20 +381,19 @@ const handleImagePickerResult = (result) => {
               />
               
               
-              <View style = {[styles.input, {flexDirection: 'row', gap: 50, alignItems: 'center'}]}>
-                <Text style = {styles.textSmall}>Gender</Text>
-                <RadioButton
-                  label="Male"
-                  labelColor={'#fff'}
-                  selected={selectedOption === 'Male'}
-                  onPress={() => handleOptionSelect('Male')}
-                />
-                <RadioButton
-                  label="Female"
-                  labelColor={'#fff'}
-                  selected={selectedOption === 'Female'}
-                  onPress={() => handleOptionSelect('Female')}
-                />
+              <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
+                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Gender:</Text>
+                <Picker
+                  ref={pickerRef}
+                  style = {[styles.input, {marginLeft: -10}]}
+                  selectedValue={user.gender}
+                  onValueChange={(itemValue, itemIndex) =>
+                      setUser({...user, gender: itemValue})
+                  }>
+                  {genders.map(item => (
+                      <Picker.Item label={item} value={item} key={item} />
+                  ))}
+                </Picker>
               </View>
               
 
@@ -421,66 +432,28 @@ const handleImagePickerResult = (result) => {
             </View>
           </>
         );
+      
       case 3:
-        return (
-          <>
-            <View style={{ marginTop: 15 }}>
-              <Text style={[styles.textMedium, { textAlign: 'left', marginLeft: 20 }]}>Contact Information</Text>
-              <TextInput
-                style={[styles.input, { margin: 15 }]}
-                placeholder="Email"
-                placeholderTextColor="#acadac"
-                value={user.email}
-                onChangeText={(text) => setUser({ ...user, email: text })}
-              />
-              <View>
-                <TextInput
-                  style={[styles.input, { margin: 15 }]}
-                  placeholder="Password"
-                  secureTextEntry={!isVisible}
-                  placeholderTextColor="#acadac"
-                  value={user.password}
-                  onChangeText={(text) => setUser({ ...user, password: text })}
-                />
-                <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
-                  style = {{
-                    position: 'absolute',
-                    right: 10, top: 25,
-                    height: 40, 
-                    width: 40
-                  }}
-                >
-                  <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
-                </TouchableOpacity>
-              </View>
-              
-              <TextInput
-                style={[styles.input, { margin: 15 }]}
-                placeholder="Phone Number"
-                placeholderTextColor="#acadac"
-                value={user.phoneNumber}
-                onChangeText={(text) => setUser({ ...user, phoneNumber: text })}
-              />
-            </View>
-          </>
-        );
-      case 4:
         return (
           <>
             <View>
               <Text style={[styles.textMedium, { color: '#acadac', marginLeft: 20 }]}>Academic Details</Text>
-              
-              <Picker
-                selectedValue={user.faculty}
-                onValueChange={(itemValue, itemIndex) =>
-                    setUser({...user, faculty: itemValue})
-                }>
-                {faculty.map(item => (
-                    <Picker.Item label={item} value={item} key={item} />
-                ))}
-              </Picker>
-
-
+             
+              <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
+                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Faculty:</Text>
+                <Picker
+                  ref={pickerRef}
+                  style = {[styles.input, {marginLeft: -10}]}
+                  selectedValue={user.faculty}
+                  onValueChange={(itemValue, itemIndex) =>
+                      setUser({...user, faculty: itemValue})
+                  }>
+                  {faculties.map(item => (
+                      <Picker.Item label={item} value={item} key={item} />
+                  ))}
+                </Picker>
+              </View>
+          
               <TouchableOpacity onPress={() => setModalVisible(true)}  style={[styles.input, {justifyContent: 'center'}]}>
                 <Text style = {{color: '#acadac', justifyContent: 'center'}}>{"Select department" ? `Department: ${user.department}` : null}</Text>
               </TouchableOpacity>
@@ -536,19 +509,77 @@ const handleImagePickerResult = (result) => {
                 value={user.program}
                 onChangeText={(text) => setUser({ ...user, program: text })}
               />
+              <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
+                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Level:</Text>
+                <Picker
+                  ref={pickerRef}
+                  style = {[styles.input, {marginLeft: -10}]}
+                  selectedValue={user.level}
+                  onValueChange={(itemValue, itemIndex) =>
+                      setUser({...user, level: itemValue})
+                  }>
+                  {levels.map(item => (
+                      <Picker.Item label={item} value={item} key={item} />
+                  ))}
+                </Picker>
+              </View>
+              <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
+                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Gender:</Text>
+                <Picker
+                  ref={pickerRef}
+                  style = {[styles.input, {marginLeft: -10}]}
+                  selectedValue={user.enrollmentYear}
+                  onValueChange={(itemValue, itemIndex) =>
+                      setUser({...user, enrollmentYear: itemValue})
+                  }>
+                  {datesArray.map(item => (
+                      <Picker.Item label={item} value={item} key={item} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          </>
+        );
+
+        case 4:
+        return (
+          <>
+            <View style={{ marginTop: 15 }}>
+              <Text style={[styles.textMedium, { textAlign: 'left', marginLeft: 20 }]}>Contact Information</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Level"
+                style={[styles.input, { margin: 15 }]}
+                placeholder="Email"
                 placeholderTextColor="#acadac"
-                value={user.level}
-                onChangeText={(text) => setUser({ ...user, level: text })}
+                value={user.email}
+                onChangeText={(text) => setUser({ ...user, email: text })}
               />
+              <View>
+                <TextInput
+                  style={[styles.input, { margin: 15 }]}
+                  placeholder="Password"
+                  secureTextEntry={!isVisible}
+                  placeholderTextColor="#acadac"
+                  value={user.password}
+                  onChangeText={(text) => setUser({ ...user, password: text })}
+                />
+                <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
+                  style = {{
+                    position: 'absolute',
+                    right: 10, top: 25,
+                    height: 40, 
+                    width: 40
+                  }}
+                >
+                  <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
+                </TouchableOpacity>
+              </View>
+              
               <TextInput
-                style={styles.input}
-                placeholder="Year of Enrollment"
+                style={[styles.input, { margin: 15 }]}
+                placeholder="Phone Number"
                 placeholderTextColor="#acadac"
-                value={user.enrollmentYear}
-                onChangeText={(text) => setUser({ ...user, enrollmentYear: text })}
+                value={user.phoneNumber}
+                onChangeText={(text) => setUser({ ...user, phoneNumber: text })}
               />
             </View>
           </>
@@ -680,7 +711,7 @@ const styles = StyleSheet.create({
     borderColor: '#0CEEF2',
     borderRadius: 20,
     padding: 10,
-    color: '#fff',
+    color: '#acadac',
   },
   button: {
     margin: 15,
