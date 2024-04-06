@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import * as LocalAuthentication from 'expo-local-authentication'
 import axios from 'axios'
 import { Feather } from '@expo/vector-icons'
+import CircularLoader from '../component/CircularLoader'
 
 const Login = () => {
     const fingerPrintImage = require('../assets/finger.png')
@@ -15,6 +16,8 @@ const Login = () => {
       password:''
     })
 
+    const [isLoading, setIsLoading] = useState(false)
+
     const handleNavigation = () => {
       navigate.navigate('Register')
     }
@@ -23,6 +26,7 @@ const Login = () => {
   
     const userLogin = async (fingerprint, userData) => {
       try {
+        setIsLoading(true)
         const response = await axios.post(backendURL, {
           fingerprint: fingerprint,
           email: userData.email,
@@ -30,25 +34,31 @@ const Login = () => {
         });
     
         if (response.data.error) {
+          setIsLoading(false)
           Alert.alert('Error', response.data.error);
           console.error(response.data.error);
         } 
         else if (response.status === 200) {
+          setIsLoading(false)
           Alert.alert('Success', response.data.message);
           console.log(response.data.token);
           navigate.navigate('Home')
+          setUser("")
         }
-    
+       
       } catch (error) {
         if (error.response){
+          setIsLoading(false)
           Alert.alert('Error',  error.response.data.error);
           console.log(error.response.data)
         }
         else if (error.request){
+          setIsLoading(false)
           Alert.alert('Error', error.request);
           console.log(error.request)
         }
         else if (error){
+          setIsLoading(false)
           Alert.alert('Error', error.message);
           console.log(`Error: ${error.message}`)
         }
@@ -58,6 +68,7 @@ const Login = () => {
 
     const handleLogin = async () => {
       try {
+        setIsLoading(true)
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
         if (!hasHardware) {
           Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
@@ -66,6 +77,7 @@ const Login = () => {
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
         if (!isEnrolled) {
           Alert.alert('Error', 'No fingerprint enrolled on this device.');
+          
           return;
         }
         const result = await LocalAuthentication.authenticateAsync({
@@ -77,10 +89,14 @@ const Login = () => {
           console.log(typeof fingerprintData);
           userLogin(fingerprintData, user); 
         } else {
+          setIsLoading(false)
           Alert.alert('Error', 'Fingerprint authentication failed');
+          
         }
+       
       } catch (error) {
         Alert.alert('Error', error.message)
+        
       }
     };
     
@@ -112,6 +128,7 @@ const Login = () => {
                   value={user.password}
                   onChangeText={(text) => setUser({ ...user, password: text })}
                 />
+
                 <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
                   style = {{
                     position: 'absolute',
@@ -122,12 +139,19 @@ const Login = () => {
                 >
                   <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
                 </TouchableOpacity>
+              
+                
               </View>
               
             </View>
             
             <Pressable style = {styles.button} onPress={handleLogin}>
+              {isLoading ? (
+                <CircularLoader />
+              ) : (
                 <Text style = {{color: '#fff', fontSize: 20, fontWeight: 'bold'}}>Proceed</Text>
+              )}
+                
             </Pressable>
             <View style = {{flexDirection: 'row', gap: 5, alignItems: 'center', margin: 15}}>
                 <Text style = {styles.textSmall}>Haven't registered?</Text>

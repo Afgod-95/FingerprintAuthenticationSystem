@@ -15,6 +15,7 @@ import  Feather from '@expo/vector-icons/Feather';
 import { Picker } from '@react-native-picker/picker'
 import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
+import CircularLoader from '../component/CircularLoader';
 
 const Register = () => {
   const [user, setUser] = useState({
@@ -32,6 +33,8 @@ const Register = () => {
     level: 'L100',
     enrollmentYear: '',
   });
+
+  const [isLoading, setIsLoading] = useState(false)
 
   const pickerRef = useRef();
 
@@ -116,76 +119,71 @@ const Register = () => {
     hideDatePicker();
   };
 
-
-  
-  
-  
-  
-
-
-
   // Image Picker
-const pickImage = async () => {
+  const pickImage = async () => {
   // Show options for selecting image from camera or file system
-  Alert.alert(
-    'Select Image Source',
-    'Choose the source of the image',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Camera',
-        onPress: async () => {
-          let result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-          });
-
-          handleImagePickerResult(result);
+    Alert.alert(
+      'Select Image Source',
+      'Choose the source of the image',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
         },
-      },
-      {
-        text: 'Gallery',
-        onPress: async () => {
-          let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-          });
+        {
+          text: 'Camera',
+          onPress: async () => {
+            let result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [4, 3],
+              quality: 1,
+            });
 
-          handleImagePickerResult(result);
+            handleImagePickerResult(result);
+          },
         },
-      },
-    ],
-    { cancelable: false }
-  );
-};
+        {
+          text: 'Gallery',
+          onPress: async () => {
+            let result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [4, 3],
+              quality: 1,
+            });
 
-// Function to handle the result of image picker
-const handleImagePickerResult = (result) => {
-  if (!result.cancelled) {
-    setUser({ ...user, profile: result.uri });
-  }
-};
+            handleImagePickerResult(result);
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  // Function to handle the result of image picker
+  const handleImagePickerResult = (result) => {
+    if (!result.cancelled) {
+      setUser({ ...user, profile: result.uri });
+    }
+  };
 
 
   // Data submission
   const submitData = async () => {
     try {
+      setIsLoading(true)
       // Check if fingerprint authentication is supported and enrolled
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       if (!hasHardware) {
         Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
+        setIsLoading(false)
         return;
       }
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
       if (!isEnrolled) {
         Alert.alert('Error', 'No fingerprint enrolled on this device.');
+        setIsLoading(false)
         return;
       }
   
@@ -239,11 +237,10 @@ const handleImagePickerResult = (result) => {
           department: user.department,
           faculty: user.faculty,
           program: user.program,
-          level: parseInt(user.level),
+          level: user.level,
           yearOfEnrollment: user.enrollmentYear,
           fingerprint: fingerPrint,
         };
-        // Make the POST request with axios
         const response = await axios.post(backendURL, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -253,6 +250,7 @@ const handleImagePickerResult = (result) => {
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error}`);
+          setIsLoading(false)
         } 
         else if (response.status === 200) {
           console.log("Navigating to home screen")
@@ -268,14 +266,12 @@ const handleImagePickerResult = (result) => {
             console.log('Error: Token is undefined or null');
             Alert.alert('Error', 'Token is undefined or null');
           }
-          Alert.alert('Message', response.data.message);
-          console.log(response.data.message);
-          await AsyncStorage.setItem('userData', JSON.stringify(user));
-          await AsyncStorage.setItem('token', token);          
-          navigate.navigate('Home');
+          setIsLoading(false)
         }
       } else {
+
         Alert.alert('Error', 'Fingerprint authentication failed');
+        setIsLoading(false)
       }
     } catch (error) {
       if (error.response) {
@@ -287,6 +283,7 @@ const handleImagePickerResult = (result) => {
       else if (error.message){
         console.log(error.message);
       }
+      setIsLoading(false)
     }
   };
   
@@ -326,7 +323,13 @@ const handleImagePickerResult = (result) => {
           Alert.alert('Error', 'Please fill in all required fields.');
           return false;
         }
+
+        if(user.studentID.length !== 9 && !user.studentID.endsWith('D') || !user.studentID.endsWith('d')){
+          Alert.alert('Error','Invalid student ID')
+          return false
+        }
         return true;
+
       case 3:
         if (!user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
           console.log(user.department, user.faculty, user.program, user.level);
@@ -334,6 +337,7 @@ const handleImagePickerResult = (result) => {
           return false;
         }
         return true;
+        
       case 4:
         if (!user.email || !user.phoneNumber || !user.password) {
           Alert.alert('Error', 'Please fill in all required fields.');
@@ -668,11 +672,19 @@ const handleImagePickerResult = (result) => {
         <Text style={styles.headerText}>Sign Up</Text>
         {renderIndicator()}
         {renderInputs()}
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
-            {currentStep < totalSteps ? 'Next' : 'Authenticate fingerprint'}
-          </Text>
+          <TouchableOpacity style={styles.button} onPress={handleNext}>
+          {isLoading ? (
+            <CircularLoader />
+          ) : (
+            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+              {currentStep < totalSteps ? 'Next' : 'Authenticate fingerprint'}
+            </Text>
+          )
+        }
+          
         </TouchableOpacity>
+       
+        
         <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', margin: 15 }}>
           <Text style={styles.textSmall}>Haven't registered?</Text>
           <TouchableOpacity onPress={handleNavigation}>

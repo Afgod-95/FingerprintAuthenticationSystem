@@ -111,6 +111,12 @@ const fingerprintController = {
                   });
                 }
 
+                if (exist.studentID === studentID){
+                  return res.status(401).json({
+                    error: 'Student Index already exist'
+                  })
+                }
+
                 const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
                 const hashedPassword = await bcrypt.hash(password, 12)
                 if (!profilePicPath) {
