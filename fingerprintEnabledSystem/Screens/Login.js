@@ -40,8 +40,18 @@ const Login = () => {
         }
     
       } catch (error) {
-        console.log(error.message);
-        Alert.alert('Error', error.message);
+        if (error.response){
+          Alert.alert('Error',  error.response.data.error);
+          console.log(error.response.data)
+        }
+        else if (error.request){
+          Alert.alert('Error', error.request);
+          console.log(error.request)
+        }
+        else if (error){
+          Alert.alert('Error', error.message);
+          console.log(`Error: ${error.message}`)
+        }
       }
     }
     
@@ -65,12 +75,12 @@ const Login = () => {
         if (result.success) {
           const fingerprintData = result.success.toString();
           console.log(typeof fingerprintData);
-          userLogin(fingerprintData, user); // Send fingerprint data directly as a string
+          userLogin(fingerprintData, user); 
         } else {
           Alert.alert('Error', 'Fingerprint authentication failed');
         }
       } catch (error) {
-        console.log('Error during fingerprint authentication:', error.message);
+        Alert.alert('Error', error.message)
       }
     };
     
@@ -88,7 +98,7 @@ const Login = () => {
             <View>
             <TextInput
                 style={[styles.input, { margin: 15 }]}
-                placeholder="Email"
+                placeholder="Enter email"
                 placeholderTextColor="#acadac"
                 value={user.email}
                 onChangeText={(text) => setUser({ ...user, email: text })}
@@ -96,7 +106,7 @@ const Login = () => {
               <View>
                 <TextInput
                   style={[styles.input, { margin: 15 }]}
-                  placeholder="Password"
+                  placeholder="Enter password"
                   secureTextEntry={!isVisible}
                   placeholderTextColor="#acadac"
                   value={user.password}

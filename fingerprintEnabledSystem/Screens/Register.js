@@ -13,14 +13,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import  Feather from '@expo/vector-icons/Feather'; 
 import { Picker } from '@react-native-picker/picker'
-import { departments, faculties, genders, levels, getDate } from '../UserData';
+import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 
 const Register = () => {
   const [user, setUser] = useState({
     profile: '',
     name: '',
-    gender: selectedOption,
+    gender: '',
     dateOfBirth: '',
     studentID: '',
     email: '',
@@ -43,15 +43,9 @@ const Register = () => {
     pickerRef.current.blur();
   }
 
-  const datesArray = getDate()
 
   const [isVisible, setIsVisible] = useState(false)
 
-  const [selectedOption, setSelectedOption] = useState('Male');
-
-  const handleOptionSelect = (option) => {
-    setSelectedOption(option);
-  };
 
   const [modalVisible, setModalVisible] = useState(false);
   const modalAnimatedValue = useRef(new Animated.Value(0)).current;
@@ -86,6 +80,26 @@ const Register = () => {
   
 
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false)
+  const [isEnrollmentDatePickerVisible, setIsEnrollmentDatePickerVisible] = useState(false);
+
+  // Function to show the enrollment year date picker
+  const showEnrollmentDatePicker = () => {
+    setIsEnrollmentDatePickerVisible(true);
+  };
+
+  // Function to hide the enrollment year date picker
+  const hideEnrollmentDatePicker = () => {
+    setIsEnrollmentDatePickerVisible(false);
+  };
+
+  // Function to handle the selection of enrollment year
+  const handleEnrollmentConfirm = (selectedDate) => {
+    const dateObject = new Date(selectedDate);
+    const date = dateObject.toLocaleDateString();
+    console.log(`Enrollment Year selected: ${date}`);
+    setUser({ ...user, enrollmentYear: date.toString() });
+    hideEnrollmentDatePicker();
+  };
 
   const showDatePicker = () => {
     setIsDatePickerVisible(true)
@@ -103,6 +117,11 @@ const Register = () => {
     setUser({ ...user, dateOfBirth: formattedDate });
     hideDatePicker();
   };
+
+
+  
+  
+  
   
 
 
@@ -223,7 +242,7 @@ const handleImagePickerResult = (result) => {
           faculty: user.faculty,
           program: user.program,
           level: parseInt(user.level),
-          yearOfEnrollment: parseInt(user.enrollmentYear),
+          yearOfEnrollment: user.enrollmentYear,
           fingerprint: fingerPrint,
         };
         // Make the POST request with axios
@@ -284,6 +303,7 @@ const handleImagePickerResult = (result) => {
   
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
+      
     } else {
       // Check if all steps are completed before triggering fingerprint authentication
       submitData(); // Trigger data submission when all steps are completed
@@ -291,19 +311,33 @@ const handleImagePickerResult = (result) => {
   };
   
   
+  
 
   const isStepValid = (step) => {
     switch (step) {
+      
       case 1:
-        return !!user.profile;
+        if (!user.profile){
+          Alert.alert('Error', 'Profile picture is required.');
+          return false
+        }
+        return true
       case 2:
-        if (!user.name || !user.dateOfBirth || !user.studentID) {
+        if (!user.name || !user.gender || !user.dateOfBirth || !user.studentID) {
+          console.log(user.name, user.gender, user.dateOfBirth, user.studentID);
           Alert.alert('Error', 'Please fill in all required fields.');
           return false;
         }
         return true;
       case 3:
-        if (!user.email || !user.phoneNumber) {
+        if (!user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
+          console.log(user.department, user.faculty, user.program, user.level);
+          Alert.alert('Error', 'Please fill in all required fields.');
+          return false;
+        }
+        return true;
+      case 4:
+        if (!user.email || !user.phoneNumber || !user.password) {
           Alert.alert('Error', 'Please fill in all required fields.');
           return false;
         }
@@ -322,16 +356,11 @@ const handleImagePickerResult = (result) => {
           return false;
         }
         return true;
-      case 4:
-        if (!user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
-          Alert.alert('Error', 'Please fill in all required fields.');
-          return false;
-        }
-        return true;
       default:
         return true;
     }
   };
+  
   
   
   // Rendering inputs
@@ -388,7 +417,7 @@ const handleImagePickerResult = (result) => {
                   style = {[styles.input, {marginLeft: -10}]}
                   selectedValue={user.gender}
                   onValueChange={(itemValue, itemIndex) =>
-                      setUser({...user, gender: itemValue})
+                    setUser({...user, gender: itemValue})
                   }>
                   {genders.map(item => (
                       <Picker.Item label={item} value={item} key={item} />
@@ -446,7 +475,7 @@ const handleImagePickerResult = (result) => {
                   style = {[styles.input, {marginLeft: -10}]}
                   selectedValue={user.faculty}
                   onValueChange={(itemValue, itemIndex) =>
-                      setUser({...user, faculty: itemValue})
+                      setUser({...user, faculty: itemValue}) 
                   }>
                   {faculties.map(item => (
                       <Picker.Item label={item} value={item} key={item} />
@@ -523,20 +552,27 @@ const handleImagePickerResult = (result) => {
                   ))}
                 </Picker>
               </View>
-              <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
-                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Gender:</Text>
-                <Picker
-                  ref={pickerRef}
-                  style = {[styles.input, {marginLeft: -10}]}
-                  selectedValue={user.enrollmentYear}
-                  onValueChange={(itemValue, itemIndex) =>
-                      setUser({...user, enrollmentYear: itemValue})
-                  }>
-                  {datesArray.map(item => (
-                      <Picker.Item label={item} value={item} key={item} />
-                  ))}
-                </Picker>
-              </View>
+
+              {Platform.OS === 'ios' ? (
+                <TouchableOpacity onPress={showEnrollmentDatePicker} style={[styles.input, { justifyContent: 'center' }]}>
+                  <Text style={{ color: '#acadac' }}>{user.enrollmentYear ? user.enrollmentYear : 'Date of enrollment'}</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity onPress={showEnrollmentDatePicker} style={[styles.input, { justifyContent: 'center' }]}>
+                    <Text style={{ color: '#acadac' }}>{user.enrollmentYear ? user.enrollmentYear : 'Date of enrollment'}</Text>
+                  </TouchableOpacity>
+                  {isEnrollmentDatePickerVisible && (
+                    <DateTimePickerModal
+                      isVisible={isEnrollmentDatePickerVisible}
+                      mode="date"
+                      onConfirm={handleEnrollmentConfirm}
+                      onCancel={hideEnrollmentDatePicker}
+                    />
+                  )}
+                </View>
+              )}
+
             </View>
           </>
         );
