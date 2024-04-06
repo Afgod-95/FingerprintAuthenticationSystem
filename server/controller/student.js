@@ -138,7 +138,6 @@ const fingerprintController = {
                   yearOfEnrollment,
                   fingerPrintData: true,
                   fingerprint: hashedFingerprint,
-                  token: generateToken(newStudent._id)
               });
 
               await newStudent.save();
