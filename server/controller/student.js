@@ -138,14 +138,18 @@ const fingerprintController = {
                   yearOfEnrollment,
                   fingerPrintData: true,
                   fingerprint: hashedFingerprint,
+                  token: generateToken(newStudent._id)
               });
 
               await newStudent.save();
 
-              res.status(200).json({ success: true, message: 'Registration successful', newStudent });
-              console.log('Registration successful', newStudent);
-              const token = generateToken(exist._id);
-              res.status(200).json({ success: true, token });
+              if (newStudent) {
+                const token = generateToken(newStudent._id);
+                res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
+                console.log('Registration successful', newStudent);
+              } else {
+                res.status(500).json({ error: 'Failed to register user' });
+              }
             } 
             catch (error) {
               console.error(`Error: ${error.message}`);
@@ -191,6 +195,7 @@ login: async (req, res) => {
     const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
     const exist = await studentData.findOne({ fingerprint: hashedFingerprint });
     const token = generateToken(exist._id);
+    console.log(token)
     res.status(200).json({ success: true, token });
   } catch (error) {
     console.error(`Error: ${error.message}`);

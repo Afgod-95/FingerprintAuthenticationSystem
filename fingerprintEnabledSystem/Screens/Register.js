@@ -20,16 +20,16 @@ const Register = () => {
   const [user, setUser] = useState({
     profile: '',
     name: '',
-    gender: '',
+    gender: 'Male',
     dateOfBirth: '',
     studentID: '',
     email: '',
     password: '',
     phoneNumber: '',
-    department: '',
-    faculty: '',
+    department: 'Dept. of Computer Science',
+    faculty: 'Faculty of Applied Science',
     program: '',
-    level: '',
+    level: 'L100',
     enrollmentYear: '',
   });
 
@@ -43,9 +43,7 @@ const Register = () => {
     pickerRef.current.blur();
   }
 
-
   const [isVisible, setIsVisible] = useState(false)
-
 
   const [modalVisible, setModalVisible] = useState(false);
   const modalAnimatedValue = useRef(new Animated.Value(0)).current;
@@ -324,7 +322,7 @@ const handleImagePickerResult = (result) => {
         return true
       case 2:
         if (!user.name || !user.gender || !user.dateOfBirth || !user.studentID) {
-          console.log(user.name, user.gender, user.dateOfBirth, user.studentID);
+          console.log(user.name, `Gender: ${user.gender}`, user.dateOfBirth, user.studentID);
           Alert.alert('Error', 'Please fill in all required fields.');
           return false;
         }
@@ -711,7 +709,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0CEEF2',
     borderRadius: 70,
     borderWidth: 0.5,
-    borderColor: '#0CEEF2',
+    borderColor: '#f2f2f2',
   },
   textMedium: {
     color: 'white',
