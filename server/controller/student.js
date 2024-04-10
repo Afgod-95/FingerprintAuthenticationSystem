@@ -110,8 +110,9 @@ const fingerprintController = {
                       error: 'Email and phone number already exist',
                   });
                 }
-
-                if (exist.studentID === studentID){
+                
+                const studentIdExist = await userIDs.findOne({ studentID: studentID })
+                if (studentIdExist){
                   return res.status(401).json({
                     error: 'Student Index already exist'
                   })

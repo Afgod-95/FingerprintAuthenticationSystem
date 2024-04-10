@@ -2,7 +2,8 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { View, Text, KeyboardAvoidingView,
    StyleSheet, Image, TextInput, TouchableOpacity, 
-   Platform, Alert, Animated, Modal, Dimensions, ScrollView
+   Platform, Alert, Animated, Modal, Dimensions, ScrollView,
+   Pressable
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +17,8 @@ import { Picker } from '@react-native-picker/picker'
 import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
+
+const storage_Key = 'userData'
 
 const Register = () => {
   const [user, setUser] = useState({
@@ -221,8 +224,8 @@ const Register = () => {
         formData.append('department', user.department);
         formData.append('faculty', user.faculty);
         formData.append('program', user.program);
-        formData.append('level', parseInt(user.level));
-        formData.append('yearOfEnrollment', parseInt(user.enrollmentYear));
+        formData.append('level', user.level);
+        formData.append('yearOfEnrollment', user.enrollmentYear);
         formData.append('fingerprint', fingerPrint);
   
         const requestData = {
@@ -258,7 +261,8 @@ const Register = () => {
           console.log(`Request data: ${JSON.stringify(requestData)}`);
           console.log(`token: ${token}`);
           if (token) {
-            await AsyncStorage.setItem('userData', JSON.stringify(user));
+            const studentDetails = await AsyncStorage.setItem(storage_Key, user);
+            console.log(studentDetails)
             await AsyncStorage.setItem('token', token);  
             navigate.navigate('Home');
           } 
@@ -379,7 +383,7 @@ const Register = () => {
               style={styles.gradientBorder}
             >
               <Image source={{ uri: user.profile || 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg' }} style={styles.image} />
-              <TouchableOpacity
+              <Pressable
                 onPress={pickImage}
                 style={{
                   alignItems: 'center',
@@ -394,7 +398,7 @@ const Register = () => {
                 }}
               >
                 <Feather name="camera" size={28} color="#0CEEF2" />
-              </TouchableOpacity>
+              </Pressable>
             </LinearGradient>
           </>
         );
