@@ -111,7 +111,7 @@ const fingerprintController = {
                   });
                 }
                 
-                const studentIdExist = await userIDs.findOne({ studentID: studentID })
+                const studentIdExist = await studentData.findOne({ studentID: studentID })
                 if (studentIdExist){
                   return res.status(401).json({
                     error: 'Student Index already exist'
