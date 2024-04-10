@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Pressable, View, Text, Animated, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { Pressable, View, Text, Animated, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -7,7 +7,18 @@ const IconsNavigation = () => {
   const [isFocused, setFocused] = useState(false);
   const [show, setShow] = useState(false);
   const slideAnimation = useRef(new Animated.Value(0)).current;
+  const rotationAnimation = useRef(new Animated.Value(0)).current;
   const navigate = useNavigation();
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotationAnimation, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
 
   const handlePress = () => {
     setFocused(!isFocused);
@@ -30,6 +41,17 @@ const IconsNavigation = () => {
     ],
   };
 
+  const rotationStyle = {
+    transform: [
+      {
+        rotate: rotationAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: ['0deg', '360deg'],
+        }),
+      },
+    ],
+  };
+
   return (
     <View>
       <Pressable
@@ -46,13 +68,32 @@ const IconsNavigation = () => {
           backgroundColor: '#212020',
         }}
       >
-        <Feather name="settings" size={30} color={isFocused ? '#fff' : '#acadac'} />
+        <Animated.View style={rotationStyle}>
+          <Feather name="settings" size={30} color={isFocused ? '#fff' : '#acadac'} />
+        </Animated.View>
       </Pressable>
       {show && (
         <Animated.View style={[{ position: 'absolute', bottom: 60, right: 10 }, slidingStyle]}>
           <TouchableOpacity
-            onPress={()=> {
-              navigate.navigate('Login');
+            onPress={() => {
+              Alert.alert(
+                'Logout',
+                'Are you sure you want to log out?',
+                [
+                  {
+                    text: 'Cancel',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'YES',
+                    onPress: () => {
+                      navigate.navigate('Login');
+                    },
+                  },
+                ],
+                { cancelable: false }
+              );
             }}
             style={{
               backgroundColor: '#212020',

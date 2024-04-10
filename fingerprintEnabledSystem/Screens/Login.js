@@ -145,7 +145,7 @@ const Login = () => {
               
             </View>
             
-            <Pressable style = {styles.button} onPress={handleLogin}>
+            <Pressable style = {styles.button} onPress={handleLogin} disabled = {isLoading}>
               {isLoading ? (
                 <CircularLoader />
               ) : (

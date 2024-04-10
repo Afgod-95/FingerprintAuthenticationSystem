@@ -261,8 +261,7 @@ const Register = () => {
           console.log(`Request data: ${JSON.stringify(requestData)}`);
           console.log(`token: ${token}`);
           if (token) {
-            const studentDetails = await AsyncStorage.setItem(storage_Key, user);
-            console.log(studentDetails)
+            await AsyncStorage.setItem(storage_Key, JSON.stringify(user));
             await AsyncStorage.setItem('token', token);  
             navigate.navigate('Home');
           } 
@@ -291,8 +290,17 @@ const Register = () => {
     }
   };
   
-  
-
+  useEffect (() => {
+    return async () => {
+      try {
+        const users = await AsyncStorage.getItem(storage_Key)
+        console.log(JSON.parse(users))
+        console.log('Userdata retrieved successfully')
+      } catch (error) {
+        console.log(error.message)
+      }
+    }
+  },[])
 
   const handleNext = () => {
     if (!isStepValid(currentStep)) {
@@ -676,7 +684,7 @@ const Register = () => {
         <Text style={styles.headerText}>Sign Up</Text>
         {renderIndicator()}
         {renderInputs()}
-          <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <TouchableOpacity style={styles.button} onPress={handleNext} disabled = {isLoading}>
           {isLoading ? (
             <CircularLoader />
           ) : (
