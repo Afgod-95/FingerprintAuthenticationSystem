@@ -175,17 +175,17 @@ const fingerprintController = {
 
 login: async (req, res) => {
   try {
-    const { fingerprint, email, password } = req.body;
+    const { fingerprint, studentID, password } = req.body;
     if (!email || !password){
       return res.status(400).json({ 
         error: "Please enter all fields"
       });
     }
     // Get user by email
-    const existUser = await studentData.findOne({ email });
-    if (!existUser) {
+    const studentIDNo = await studentData.findOne({ studentID });
+    if (!studentIDNo) {
       return res.status(401).json({
-        error: "User not found",
+        error: "Student ID not found",
       });
     }
 
@@ -199,10 +199,12 @@ login: async (req, res) => {
 
     // Hash the provided fingerprint data
     const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
-    const exist = await studentData.findOne({ fingerprint: hashedFingerprint });
+    const exist = await studentData.findOne({ studentID: studentID });
     const token = generateToken(exist._id);
     console.log(token)
-    res.status(200).json({ success: true, token });
+    res.status(200).json({ success: true,
+      message: "Login successfull", token
+    });
   } catch (error) {
     console.error(`Error: ${error.message}`);
     res.status(500).json({
