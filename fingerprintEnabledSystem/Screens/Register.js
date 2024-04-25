@@ -692,7 +692,7 @@ const Register = () => {
         {renderIndicator()}
         <ScrollView showsVerticalScrollIndicator = {false}>
           {renderInputs()}
-        </ScrollView>
+       
         
          <TouchableOpacity style={styles.button} onPress={handleNext} disabled = {isLoading}>
             {isLoading ? (
@@ -712,6 +712,7 @@ const Register = () => {
             </TouchableOpacity>
           </Text>
         </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
