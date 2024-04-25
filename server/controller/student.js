@@ -176,7 +176,7 @@ const fingerprintController = {
 login: async (req, res) => {
   try {
     const { fingerprint, studentID, password } = req.body;
-    if (!email || !password){
+    if (!studentID || !password){
       return res.status(400).json({ 
         error: "Please enter all fields"
       });
