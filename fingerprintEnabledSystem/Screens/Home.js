@@ -1,4 +1,4 @@
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { View, Text,  StyleSheet, Image,  ScrollView, Modal, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -10,21 +10,37 @@ const Home = () => {
   const navigate = useNavigation()
   const [userData, setUserData] = useState(null)
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [loginSuccess, setLoginSuccess] = useState(false)
   
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
   
   useEffect(() => {
+    setLoginSuccess(false)
+    setTimeout(() => {
+      setLoginSuccess(true)
+    }, 3000)
+  }, [])
+
+  useEffect(() => {
     const getUserData = async () => {
       try {
         const userDataString = await AsyncStorage.getItem('userData');
-        if (userDataString) {
-          // Parse the userDataString into an object
-          const parsedUserData = JSON.parse(userDataString);
-          setUserData(parsedUserData);
+        const userToken = await AsyncStorage.getItem('token')
+        
+        if( userToken) {
+          if (userDataString) {
+            const parsedUserData = JSON.parse(userDataString);
+            setUserData(parsedUserData);
+          }
+
+          else{
+            console.log(`Error getting user token ${userToken}`)
+          }
         }
+        
+       
       } catch (error) {
         console.error('Error retrieving user data:', error);
       }
@@ -33,68 +49,50 @@ const Home = () => {
     getUserData();
   }, []);
 
-  const handleImage = (imageSrc) => {
-    setImage(imageSrc)
-  }
-   
    
   return (
    <SafeAreaView style = {styles.container}>
       <View style = {styles.topContainer}>
-        <Text style = {styles.headerText}>Student Details</Text>
-        <LinearGradient
-          colors={['#0CEEF2', '#E400F8', 'transparent']}
-          start={{ x: 1, y: 0.1 }}
-          end={{ x: 0.8, y: 1 }}
-          style={styles.gradientBorder}
-        >
-          {userData && userData.profile ? (
-            <TouchableOpacity onPress={toggleModal}>
-              <Image source={{ uri: userData.profile }} style={styles.image} />
-            </TouchableOpacity>
-          ) : (
-            <Text style={{ color: 'white' }}>No profile picture</Text>
-          )}
-        </LinearGradient>
-
-        <Modal
-          animationType="fade"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={toggleModal}
-        >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-          <Image source={{ uri: userData?.profile }} style={styles.modalImage} />
+          <Text style = {styles.headerText}>Student Data</Text>
+          <LinearGradient
+            colors={['#0CEEF2', '#E400F8', 'transparent']}
+            start={{ x: 1, y: 0.1 }}
+            end={{ x: 0.8, y: 1 }}
+            style={styles.gradientBorder}
+          >
+            {userData && userData.profile ? (
+              <TouchableOpacity onPress={toggleModal}>
+                <Image source={{ uri: userData.profile }} style={styles.image} />
+              </TouchableOpacity>
+            ) : (
+              <Text style={{ color: 'white' }}>No profile picture</Text>
+            )}
+          </LinearGradient>
+  
         </View>
-      </Modal>
-
-      </View>
-      <ScrollView showsVerticalScrollIndicator = {true}>
-        <View style = {{margin: 15}}>
-          <Text style = {styles.textMedium}>Basic Information</Text>
-          <Text style = {styles.textSmall}>Name:   {userData?.name}</Text>
-          <Text style = {styles.textSmall}>Date of birth: {userData?.dateOfBirth}</Text>
-          <Text style = {styles.textSmall}>Gender: {userData?.gender}</Text>
-        </View>
-        <View style = {{margin: 15,}}>
-          <Text style = {styles.textMedium}>Contact Information</Text>
-          <Text style = {styles.textSmall}>Email: {userData?.email}</Text>
-          <Text style = {styles.textSmall}>Phone Number: {userData?.phoneNumber}  </Text>
-        </View>
-
-        <View style = {{margin: 15}}>
-          <Text style = {styles.textMedium}>Academic Details</Text>         
-          <Text style = {styles.textSmall}>Faculty: {userData?.faculty}</Text>
-          <Text style = {styles.textSmall}>Department: {userData?.department} </Text>
-          <Text style = {styles.textSmall}>Program: {userData?.program} </Text>
-          <Text style = {styles.textSmall}>Level: {userData?.level}</Text>
-          <Text style = {styles.textSmall}>Year of enrollment: {userData?.yearOfEnrollment}</Text>
-        </View>  
-      </ScrollView>  
-      <IconsNavigation />
+        <ScrollView showsVerticalScrollIndicator = {true}>
+          <View style = {{margin: 15}}>
+            <Text style = {styles.textMedium}>Basic Information</Text>
+            <Text style = {styles.textSmall}>Name:   {userData?.name}</Text>
+            <Text style = {styles.textSmall}>Date of birth: {userData?.dateOfBirth}</Text>
+            <Text style = {styles.textSmall}>Gender: {userData?.gender}</Text>
+          </View>
+          <View style = {{margin: 15,}}>
+            <Text style = {styles.textMedium}>Contact Information</Text>
+            <Text style = {styles.textSmall}>Email: {userData?.email}</Text>
+            <Text style = {styles.textSmall}>Phone Number: {userData?.phoneNumber}  </Text>
+          </View>
+  
+          <View style = {{margin: 15}}>
+            <Text style = {styles.textMedium}>Academic Details</Text>         
+            <Text style = {styles.textSmall}>Faculty: {userData?.faculty}</Text>
+            <Text style = {styles.textSmall}>Department: {userData?.department} </Text>
+            <Text style = {styles.textSmall}>Program: {userData?.program} </Text>
+            <Text style = {styles.textSmall}>Level: {userData?.level}</Text>
+            <Text style = {styles.textSmall}>Year of enrollment: {userData?.enrollmentYear}</Text>
+          </View>  
+        </ScrollView>  
+        <IconsNavigation />
     </SafeAreaView>
   )
 }

@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "fingerprintEnabledSystem",
+    "name": "Fingerprint Auth",
     "slug": "fingerprintEnabledSystem",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/splash.png",
+    "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
@@ -19,12 +19,18 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/splash.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000"
-      }
+      },
+      "package": "com.afgod95.fingerprintEnabledSystem"
     },
     "web": {
-      "favicon": "./assets/splash.png"
+      "favicon": "./assets/adaptive-icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "345d15fc-82df-4369-af5a-b279f1f42953"
+      }
     }
   }
 }

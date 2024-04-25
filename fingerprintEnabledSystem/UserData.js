@@ -1,4 +1,5 @@
 export const departments = [
+    "Dept. of Computer Science",
     "Dept. of Mechanical Engineering",
     "Dept. of Electrical/Electronic Engineering",
     "Dept. of Civil Engineering",
@@ -6,7 +7,6 @@ export const departments = [
     "Dept. of Building Technology",
     "Dept. of Applied Mathematics and Statistics",
     "Dept. of Science Laboratory Technology",
-    "Dept. of Computer Science",
     "Dept. of Medical Laboratory Technology",
     "Dept. of Hotel Catering & Institutional Management (HCIM)",
     "Dept. of Fashion Design & Textile Department",
@@ -37,20 +37,3 @@ export const levels = [
 ]
 
 // Function to get dates from 2012 to current date
-export const getDate = () => {
-    const startDate = new Date(2012, 0, 1); 
-    const endDate = new Date(); // Current date
-  
-    const datesArray = [];
-    let currentDate = startDate;
-  
-    while (currentDate <= endDate) {
-      datesArray.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    console.log(datesArray)
-  
-    return datesArray;
-}
-  

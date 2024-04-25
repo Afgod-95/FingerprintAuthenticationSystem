@@ -336,7 +336,7 @@ const Register = () => {
           return false;
         }
 
-        if(user.studentID.length !== 9 && !user.studentID.endsWith('D') || !user.studentID.endsWith('d')){
+        if(!user.studentID.length !== 9 || !user.studentID.endsWith('D')){
           Alert.alert('Error','Invalid student ID')
           return false
         }
@@ -369,6 +369,13 @@ const Register = () => {
           Alert.alert('Error', 'Invalid phone number format (10 digits expected)');
           return false;
         }
+
+        if (user.password.length < 5) {
+          Alert.alert('Error', 'Password must be at least 6 characters long)');
+          return false;
+        }
+
+
         return true;
       default:
         return true;
@@ -446,7 +453,6 @@ const Register = () => {
                 mode='date'
                 onConfirm={handleConfirm}
                 onCancel={hideDatePicker}
-              
               />
               ) : (
                 <View style = {{alignItems: 'center', justifyContent: 'center'}}> 
@@ -467,7 +473,7 @@ const Register = () => {
 
               <TextInput
                 style={[styles.input, { margin: 15 }]}
-                placeholder="Student ID"
+                placeholder="Student ID eg. 0121*******D"
                 placeholderTextColor="#acadac"
                 value={user.studentID}
                 onChangeText={(text) => setUser({ ...user, studentID: text })}
@@ -682,26 +688,29 @@ const Register = () => {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.innerContainer}>
         <Text style={styles.headerText}>Sign Up</Text>
+        
         {renderIndicator()}
-        {renderInputs()}
-          <TouchableOpacity style={styles.button} onPress={handleNext} disabled = {isLoading}>
-          {isLoading ? (
-            <CircularLoader />
-          ) : (
-            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
-              {currentStep < totalSteps ? 'Next' : 'Authenticate fingerprint'}
-            </Text>
-          )
-        }
+        <ScrollView showsVerticalScrollIndicator = {false}>
+          {renderInputs()}
+        </ScrollView>
+        
+         <TouchableOpacity style={styles.button} onPress={handleNext} disabled = {isLoading}>
+            {isLoading ? (
+              <CircularLoader />
+            ) : (
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+                {currentStep < totalSteps ? 'Next' : 'Authenticate fingerprint'}
+              </Text>
+            )
+            }
           
         </TouchableOpacity>
-       
-        
-        <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', margin: 15 }}>
-          <Text style={styles.textSmall}>Haven't registered?</Text>
-          <TouchableOpacity onPress={handleNavigation}>
-            <Text style={[styles.textSmall, { color: '#0CEEF2' }]}>Click here</Text>
-          </TouchableOpacity>
+        <View>
+          <Text style={styles.textSmall}>Already have an account?
+            <TouchableOpacity onPress={handleNavigation}>
+              <Text style={[styles.textSmall, { color: '#0CEEF2' }]}> Click here</Text>
+            </TouchableOpacity>
+          </Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -764,7 +773,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 0.5,
     margin: 10,
-    width: 350,
+    width: Dimensions.get('window').width - 30,
     height: 50,
     borderColor: '#0CEEF2',
     borderRadius: 20,
@@ -773,7 +782,7 @@ const styles = StyleSheet.create({
   },
   button: {
     margin: 15,
-    width: 350,
+    width: Dimensions.get('window').width - 30,
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',

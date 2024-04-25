@@ -1,18 +1,19 @@
 import { useNavigation } from '@react-navigation/native'
-import React, { useState } from 'react'
-import { View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, StyleSheet, Image, Pressable, Alert } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, StyleSheet, Image, Pressable, Alert, ScrollView, Dimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as LocalAuthentication from 'expo-local-authentication'
 import axios from 'axios'
 import { Feather } from '@expo/vector-icons'
 import CircularLoader from '../component/CircularLoader'
+import FingerprintAnimation from '../component/FingerprintAnimation'
 
 const Login = () => {
-    const fingerPrintImage = require('../assets/finger.png')
     const navigate = useNavigation()
     const [isVisible, setIsVisible] = useState(false)
+    
     const [user, setUser] = useState({
-      email: '',
+      studentID: '',
       password:''
     })
 
@@ -22,6 +23,7 @@ const Login = () => {
       navigate.navigate('Register')
     }
 
+
     const backendURL = "https://fingerprintenabled.onrender.com/api/auth/login"
   
     const userLogin = async (fingerprint, userData) => {
@@ -29,7 +31,7 @@ const Login = () => {
         setIsLoading(true)
         const response = await axios.post(backendURL, {
           fingerprint: fingerprint,
-          email: userData.email,
+          studentID: userData.studentID,
           password: userData.password
         });
     
@@ -40,9 +42,15 @@ const Login = () => {
         } 
         else if (response.status === 200) {
           setIsLoading(false)
-          Alert.alert('Success', response.data.message);
-          console.log(response.data.token);
-          navigate.navigate('Home')
+          const { token } = response.data
+          if ( token ){
+            Alert.alert('Message', response.data.message)
+            navigate.navigate('Home')
+          }
+          else{
+            Alert.alert('Error', 'User not found')
+          }
+         
           setUser("")
         }
        
@@ -86,7 +94,6 @@ const Login = () => {
     
         if (result.success) {
           const fingerprintData = result.success.toString();
-          console.log(typeof fingerprintData);
           userLogin(fingerprintData, user); 
         } else {
           setIsLoading(false)
@@ -100,66 +107,67 @@ const Login = () => {
       }
     };
     
-  
   return (
    <SafeAreaView style = {styles.container}>
-        <KeyboardAvoidingView style = {styles.innerContainer}>
-            <Text style = {styles.headerText}>Login</Text>
-            <Image source = {fingerPrintImage} style = {styles.image}/>
-            <View style = {{margin: 20}}>
-                <Text style = {styles.textMedium}>Fingerprint Auth</Text>
-                <Text style = {styles.textSmall}>Authenticate using your fingerprint</Text>
-            </View>
+      <KeyboardAvoidingView style = {styles.innerContainer}>
+        <Text style = {styles.headerText}>Login</Text>
 
-            <View>
+        <ScrollView showsVerticalScrollIndicator = {false}>
+          <FingerprintAnimation /> 
+          <View style = {{marginBottom: 10}}>
+              <Text style = {styles.textMedium}>Fingerprint Auth</Text>
+              <Text style = {styles.textSmall}>Authenticate using your fingerprint</Text>
+          </View>
+
+          <View style = {styles.container}>
             <TextInput
-                style={[styles.input, { margin: 15 }]}
-                placeholder="Enter email"
+              style={[styles.input, { margin: 10 }]}
+              placeholder="Enter your student ID"
+              placeholderTextColor="#acadac"
+              value={user.studentID}
+              onChangeText={(text) => setUser({ ...user, studentID: text })}
+            />
+            <View>
+              <TextInput
+                style={[styles.input, { margin: 10 }]}
+                placeholder="Enter password"
+                secureTextEntry={!isVisible}
                 placeholderTextColor="#acadac"
-                value={user.email}
-                onChangeText={(text) => setUser({ ...user, email: text })}
+                value={user.password}
+                onChangeText={(text) => setUser({ ...user, password: text })}
               />
-              <View>
-                <TextInput
-                  style={[styles.input, { margin: 15 }]}
-                  placeholder="Enter password"
-                  secureTextEntry={!isVisible}
-                  placeholderTextColor="#acadac"
-                  value={user.password}
-                  onChangeText={(text) => setUser({ ...user, password: text })}
-                />
 
-                <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
-                  style = {{
-                    position: 'absolute',
-                    right: 10, top: 25,
-                    height: 40, 
-                    width: 40
-                  }}
-                >
-                  <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
-                </TouchableOpacity>
-              
-                
-              </View>
-              
+              <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
+                style = {{
+                  position: 'absolute',
+                  right: 18, top: 24,
+                  height: 40, 
+                  width: 40
+                }}
+              >
+                <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
+              </TouchableOpacity>
             </View>
             
-            <Pressable style = {styles.button} onPress={handleLogin} disabled = {isLoading}>
-              {isLoading ? (
-                <CircularLoader />
-              ) : (
-                <Text style = {{color: '#fff', fontSize: 20, fontWeight: 'bold'}}>Proceed</Text>
-              )}
-                
-            </Pressable>
-            <View style = {{flexDirection: 'row', gap: 5, alignItems: 'center', margin: 15}}>
-                <Text style = {styles.textSmall}>Haven't registered?</Text>
-                <Pressable onPress={handleNavigation}>
-                    <Text style = {[styles.textSmall, {color: '#0CEEF2'}]}>Click here to sign up</Text>
-                </Pressable>
-            </View>
-        </KeyboardAvoidingView>
+          </View>
+          
+          <Pressable style = {styles.button} onPress={handleLogin} disabled = {isLoading}>
+            {isLoading ? (
+              <CircularLoader />
+            ) : (
+              <Text style = {{color: '#fff', fontSize: 20, fontWeight: 'bold'}}>Proceed</Text>
+            )}  
+          </Pressable>
+          <View>
+          <Text style={[styles.textSmall, {alignItems: 'center', display: 'flex'}]}>Haven't registered? 
+            <TouchableOpacity onPress={handleNavigation}>
+              <Text style={[styles.textSmall, { color: '#0CEEF2' }]}> Click here</Text>
+            </TouchableOpacity>
+          </Text>
+        </View>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
         
    </SafeAreaView>
   )
@@ -169,13 +177,15 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: '#000',
+      justifyContent: 'center',
+      alignItems: 'center'
     },
-  
+
     innerContainer: {
-      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
     },
+  
     headerText: {
       color: 'white',
       fontSize: 45,
@@ -188,7 +198,6 @@ const styles = StyleSheet.create({
       fontSize: 25,
       fontWeight: 'bold',
       textAlign: 'center',
-      margin: 10
     },
     textSmall: {
         color: 'white',
@@ -198,28 +207,23 @@ const styles = StyleSheet.create({
 
     input: {
       borderWidth: 0.5,
-      margin: 10,
-      width: 350,
+      margin: 15,
+      width: Dimensions.get('window').width - 30,
       height: 50,
       borderColor: '#0CEEF2',
       borderRadius: 20,
       padding: 10,
-      color: '#fff',
+      color: '#acadac',
     },
     
-    image: {
-        width: 250,
-        height: 250,
-        objectFit: 'contain'
-    },
     button: {
-        margin: 15,
-        width: 350,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#0CEEF2',
-        borderRadius: 20,
-        padding: 10,
+      margin: 15,
+      width: Dimensions.get('window').width - 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#0CEEF2',
+      borderRadius: 20,
+      padding: 10,
     }
     
   });
