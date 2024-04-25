@@ -26,7 +26,7 @@
     "expo-radio-button": "^1.0.8",
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
-    "expo-web-browser": "^12.8.2",
+    "expo-web-browser": "~12.3.2",
     "lottie-react-native": "5.1.6",
     "radio-buttons-react-native": "^1.0.4",
     "react": "18.2.0",

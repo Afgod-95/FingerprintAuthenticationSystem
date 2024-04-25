@@ -290,17 +290,6 @@ const Register = () => {
     }
   };
   
-  useEffect (() => {
-    return async () => {
-      try {
-        const users = await AsyncStorage.getItem(storage_Key)
-        console.log(JSON.parse(users))
-        console.log('Userdata retrieved successfully')
-      } catch (error) {
-        console.log(error.message)
-      }
-    }
-  },[])
 
   const handleNext = () => {
     if (!isStepValid(currentStep)) {
@@ -336,7 +325,7 @@ const Register = () => {
           return false;
         }
 
-        if(!user.studentID.length !== 9 || !user.studentID.endsWith('D')){
+        if(user.studentID.length !== 9 || !user.studentID.endsWith('D')){
           Alert.alert('Error','Invalid student ID')
           return false
         }
@@ -382,7 +371,46 @@ const Register = () => {
     }
   };
   
+  //rendering indicator / steps 
+  const renderIndicator = () => {
+    return (
+      <>
+        <View style={{ margin: 5, flexDirection: 'row', alignItems: 'center', gap: 25 }}>
+          {steps.map((step) => (
+            <TouchableOpacity
+              key={step}
+              onPress={() => {
+                if (!isStepValid(step)) {
+                  Alert.alert('Error', 'Please fill in all required fields before proceeding.');
+                  return;
+                }
+                setCurrentStep(step);
+              }}
+              style={[
+                styles.circle,
+                {
+                  backgroundColor: currentStep === step ? '#0CEEF2' : 'transparent',
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.textSmall,
+                  {
+                    color: currentStep !== step ? '#acadac' : '#fff',
+                  },
+                ]}
+              >
+                {step}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </>
+    );
+  };
   
+
   
   // Rendering inputs
   const renderInputs = () => {
@@ -390,9 +418,10 @@ const Register = () => {
       case 1:
         return (
           <>
-            <Text style={styles.textMedium}>Choose a profile</Text>
+          <View style = {{justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={styles.textMedium}>Choose a profile</Text>
             <LinearGradient
-              colors={['#0CEEF2', '#E400F8', 'transparent']}
+              colors={['#0CEEF2', '#fff', 'transparent']}
               start={{ x: 1, y: 0.1 }}
               end={{ x: 0.8, y: 1 }}
               style={styles.gradientBorder}
@@ -415,6 +444,8 @@ const Register = () => {
                 <Feather name="camera" size={28} color="#0CEEF2" />
               </Pressable>
             </LinearGradient>
+          </View>
+            
           </>
         );
       case 2:
@@ -645,45 +676,7 @@ const Register = () => {
     }
   };
 
-  const renderIndicator = () => {
-    return (
-      <>
-        <View style={{ margin: 5, flexDirection: 'row', alignItems: 'center', gap: 25 }}>
-          {steps.map((step) => (
-            <TouchableOpacity
-              key={step}
-              onPress={() => {
-                if (!isStepValid(step)) {
-                  Alert.alert('Error', 'Please fill in all required fields before proceeding.');
-                  return;
-                }
-                setCurrentStep(step);
-              }}
-              style={[
-                styles.circle,
-                {
-                  backgroundColor: currentStep === step ? '#0CEEF2' : 'transparent',
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.textSmall,
-                  {
-                    color: currentStep !== step ? '#acadac' : '#fff',
-                  },
-                ]}
-              >
-                {step}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </>
-    );
-  };
   
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.innerContainer}>
@@ -692,8 +685,6 @@ const Register = () => {
         {renderIndicator()}
         <ScrollView showsVerticalScrollIndicator = {false}>
           {renderInputs()}
-       
-        
          <TouchableOpacity style={styles.button} onPress={handleNext} disabled = {isLoading}>
             {isLoading ? (
               <CircularLoader />
@@ -704,14 +695,13 @@ const Register = () => {
             )
             }
           
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.textSmall}>Already have an account?
-            <TouchableOpacity onPress={handleNavigation}>
-              <Text style={[styles.textSmall, { color: '#0CEEF2' }]}> Click here</Text>
+          </TouchableOpacity>
+          <View style = {{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap'}}>
+            <Text style={styles.textSmall}>Already have an account?</Text>
+            <TouchableOpacity onPress={handleNavigation} >
+                <Text style={[styles.textSmall, { color: '#0CEEF2', }]}> Click here</Text>
             </TouchableOpacity>
-          </Text>
-        </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

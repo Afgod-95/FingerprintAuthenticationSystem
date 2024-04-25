@@ -158,13 +158,12 @@ const Login = () => {
               <Text style = {{color: '#fff', fontSize: 20, fontWeight: 'bold'}}>Proceed</Text>
             )}  
           </Pressable>
-          <View>
-          <Text style={[styles.textSmall, {alignItems: 'center', display: 'flex'}]}>Haven't registered? 
-            <TouchableOpacity onPress={handleNavigation}>
-              <Text style={[styles.textSmall, { color: '#0CEEF2' }]}> Click here</Text>
+          <View style = {{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap'}}>
+            <Text style={styles.textSmall}>Don't have an account?</Text>
+            <TouchableOpacity onPress={handleNavigation} >
+                <Text style={[styles.textSmall, { color: '#0CEEF2', }]}> Click here</Text>
             </TouchableOpacity>
-          </Text>
-        </View>
+          </View>
 
         </ScrollView>
       </KeyboardAvoidingView>
