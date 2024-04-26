@@ -45,7 +45,7 @@ const Login = () => {
           const { token } = response.data
           if ( token ){
             Alert.alert('Message', response.data.message)
-            navigate.navigate('Home')
+            navigate.navigate('Home', {studentID: userData.studentID})
           }
           else{
             Alert.alert('Error', 'User not found')

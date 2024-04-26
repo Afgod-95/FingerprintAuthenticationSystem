@@ -1,53 +1,34 @@
-import { useNavigation } from '@react-navigation/native'
+import { useRoute } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
-import { View, Text,  StyleSheet, Image,  ScrollView, Modal, TouchableOpacity } from 'react-native'
+import { View, Text,  StyleSheet, Image,  ScrollView, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import IconsNavigation from '../component/IconsNavigation'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import axios from 'axios'
 
 const Home = () => {
-  const navigate = useNavigation()
-  const [userData, setUserData] = useState(null)
   const [modalVisible, setModalVisible] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false)
+  const [studentData, setStudentData] = useState(null)
+  const route = useRoute()
   
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
   
   useEffect(() => {
-    setLoginSuccess(false)
-    setTimeout(() => {
-      setLoginSuccess(true)
-    }, 3000)
+    const getStudentData = async () => {
+      const id = route.params?.studentID
+      await axios.get(`https://fingerprintenabled.onrender.com/api/student/${id}`)
+        .then((response) => {
+          console.log(response.data)
+          setStudentData(response.data)
+        }).catch(error => {
+        console.log(error.message)
+      })
+    }
+    getStudentData()
   }, [])
-
-  useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const userDataString = await AsyncStorage.getItem('userData');
-        const userToken = await AsyncStorage.getItem('token')
-        
-        if( userToken) {
-          if (userDataString) {
-            const parsedUserData = JSON.parse(userDataString);
-            setUserData(parsedUserData);
-          }
-
-          else{
-            console.log(`Error getting user token ${userToken}`)
-          }
-        }
-        
-       
-      } catch (error) {
-        console.error('Error retrieving user data:', error);
-      }
-    };
-
-    getUserData();
-  }, []);
 
    
   return (
@@ -60,36 +41,36 @@ const Home = () => {
             end={{ x: 0.8, y: 1 }}
             style={styles.gradientBorder}
           >
-            {userData && userData.profile ? (
+            {studentData?.student.profilePic ? (
               <TouchableOpacity onPress={toggleModal}>
-                <Image source={{ uri: userData.profile }} style={styles.image} />
+                <Image source={ studentData?.profilePic } style={styles.image} />
               </TouchableOpacity>
             ) : (
               <Text style={{ color: 'white' }}>No profile picture</Text>
             )}
           </LinearGradient>
-  
         </View>
         <ScrollView showsVerticalScrollIndicator = {true}>
           <View style = {{margin: 15}}>
             <Text style = {styles.textMedium}>Basic Information</Text>
-            <Text style = {styles.textSmall}>Name:   {userData?.name}</Text>
-            <Text style = {styles.textSmall}>Date of birth: {userData?.dateOfBirth}</Text>
-            <Text style = {styles.textSmall}>Gender: {userData?.gender}</Text>
+            <Text style = {styles.textSmall}>Name:   { studentData?.student?.name }</Text>
+            <Text style = {styles.textSmall}>Date of birth: { studentData?.dateOfBirth }</Text>
+            <Text style = {styles.textSmall}>Gender: {studentData?.profilePic }</Text>
           </View>
           <View style = {{margin: 15,}}>
             <Text style = {styles.textMedium}>Contact Information</Text>
-            <Text style = {styles.textSmall}>Email: {userData?.email}</Text>
-            <Text style = {styles.textSmall}>Phone Number: {userData?.phoneNumber}  </Text>
+            <Text style = {styles.textSmall}>Email: {studentData?.email }</Text>
+            <Text style = {styles.textSmall}>Phone Number: {studentData?.phoneNumber }  </Text>
           </View>
   
           <View style = {{margin: 15}}>
             <Text style = {styles.textMedium}>Academic Details</Text>         
-            <Text style = {styles.textSmall}>Faculty: {userData?.faculty}</Text>
-            <Text style = {styles.textSmall}>Department: {userData?.department} </Text>
-            <Text style = {styles.textSmall}>Program: {userData?.program} </Text>
-            <Text style = {styles.textSmall}>Level: {userData?.level}</Text>
-            <Text style = {styles.textSmall}>Year of enrollment: {userData?.enrollmentYear}</Text>
+            <Text style = {styles.textSmall}>Faculty: {studentData?.faculty}</Text>
+            <Text style = {styles.textSmall}>Department: { studentData?.department} </Text>
+            <Text style = {styles.textSmall}>Program: {studentData?.program } </Text>
+            <Text style = {styles.textSmall}>Student ID: { studentData?.studentID}</Text>
+            <Text style = {styles.textSmall}>Level: {studentData?.level}</Text>
+            <Text style = {styles.textSmall}>Year of enrollment: {studentData?.yearOfEnrollment }</Text>
           </View>  
         </ScrollView>  
         <IconsNavigation />

@@ -18,8 +18,6 @@ import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
 
-const storage_Key = 'userData'
-
 const Register = () => {
   const [user, setUser] = useState({
     profile: '',
@@ -30,8 +28,8 @@ const Register = () => {
     email: '',
     password: '',
     phoneNumber: '',
-    department: 'Dept. of Computer Science',
-    faculty: 'Faculty of Applied Science',
+    department: 'Please select your department',
+    faculty: 'Please select your faculty',
     program: '',
     level: 'Select Level',
     enrollmentYear: '',
@@ -59,8 +57,6 @@ const Register = () => {
     setModalVisible(false);
   };
 
-
-
   const animateModal = (toValue) => {
     Animated.timing(modalAnimatedValue, {
       toValue,
@@ -68,7 +64,6 @@ const Register = () => {
       useNativeDriver: true,
     }).start();
   };
-
 
   const backendURL = "https://fingerprintenabled.onrender.com/api/auth/register"
   
@@ -82,8 +77,6 @@ const Register = () => {
   const handleNavigation = () => {
     navigate.navigate('Login');
   };
-
-  
 
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false)
   const [isEnrollmentDatePickerVisible, setIsEnrollmentDatePickerVisible] = useState(false);
@@ -173,7 +166,6 @@ const Register = () => {
     }
   };
 
-
   // Data submission
   const submitData = async () => {
     try {
@@ -262,9 +254,8 @@ const Register = () => {
           console.log(`Request data: ${JSON.stringify(requestData)}`);
           console.log(`token: ${token}`);
           if (token) {
-            await AsyncStorage.setItem(storage_Key, JSON.stringify(user));
             await AsyncStorage.setItem('token', token);  
-            navigate.navigate('Home');
+            navigate.navigate('Login');
           } 
           else {
             console.log('Error: Token is undefined or null');

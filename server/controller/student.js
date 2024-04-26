@@ -224,6 +224,7 @@ const fingerprintController = {
           message: `Student ID found successfully \n Student ID: ${id}`,
           student
         });
+        console.log(student)
       } else {
         res.status(200).json({
           message: `Student ID not found\n Student ID: ${id}`,
