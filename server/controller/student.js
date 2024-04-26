@@ -215,18 +215,18 @@ const fingerprintController = {
 
   getStudentID: async (req, res) => {
     try {
-      const { studentId } = req.params;
+      const { id } = req.params;
 
-      const student = await studentData.findOne({ studentID: studentId });
+      const student = await studentData.findOne({ studentID: id });
 
       if (student) {
         res.status(200).json({
-          message: `Student ID found successfully \n Student ID: ${studentId}`,
+          message: `Student ID found successfully \n Student ID: ${id}`,
           student
         });
       } else {
         res.status(200).json({
-          message: `Student ID not found\n Student ID: ${studentId}`,
+          message: `Student ID not found\n Student ID: ${id}`,
           student: null 
         });
       }
