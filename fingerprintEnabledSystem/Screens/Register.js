@@ -24,7 +24,7 @@ const Register = () => {
   const [user, setUser] = useState({
     profile: '',
     name: '',
-    gender: 'Male',
+    gender: 'Select gender',
     dateOfBirth: '',
     studentID: '',
     email: '',
@@ -33,7 +33,7 @@ const Register = () => {
     department: 'Dept. of Computer Science',
     faculty: 'Faculty of Applied Science',
     program: '',
-    level: 'L100',
+    level: 'Select Level',
     enrollmentYear: '',
   });
 
@@ -58,6 +58,8 @@ const Register = () => {
     setUser({ ...user, department });
     setModalVisible(false);
   };
+
+
 
   const animateModal = (toValue) => {
     Animated.timing(modalAnimatedValue, {
@@ -249,7 +251,6 @@ const Register = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-  
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error}`);
@@ -325,6 +326,11 @@ const Register = () => {
           return false;
         }
 
+        if (user.gender === 'Select gender'){
+          Alert.alert('Error', 'Please select gender')
+          return false
+        }
+
         if(user.studentID.length !== 9 || !user.studentID.endsWith('D')){
           Alert.alert('Error','Invalid student ID')
           return false
@@ -337,6 +343,22 @@ const Register = () => {
           Alert.alert('Error', 'Please fill in all required fields.');
           return false;
         }
+
+        if (user.level === 'Select level'){
+          Alert.alert('Error', 'Please select your level')
+          return false
+        }
+
+        if (user.faculty === 'Please select your faculty'){
+          Alert.alert('Error', 'Please select your faculty')
+          return false
+        }
+
+        if (user.department === 'Please select your department'){
+          Alert.alert('Error', 'Please select your department')
+          return false
+        }
+
         return true;
         
       case 4:
@@ -389,6 +411,7 @@ const Register = () => {
               style={[
                 styles.circle,
                 {
+                  borderColor: currentStep === step ? 'transparent' : '#f2f2f2',
                   backgroundColor: currentStep === step ? '#0CEEF2' : 'transparent',
                 },
               ]}
@@ -396,6 +419,7 @@ const Register = () => {
               <Text
                 style={[
                   styles.textSmall,
+
                   {
                     color: currentStep !== step ? '#acadac' : '#fff',
                   },
@@ -454,8 +478,8 @@ const Register = () => {
             <View>
               <Text style={[styles.textMedium, { color: '#acadac', marginLeft: 20 }]}>Basic Information</Text>
               <TextInput
-                style={[styles.input, { margin: 15 }]}
-                placeholder="Name"
+                style={styles.input}
+                placeholder="Enter your name eg. John Doe"
                 placeholderTextColor="#acadac"
                 value={user.name}
                 onChangeText={(text) => setUser({ ...user, name: text })}
@@ -463,12 +487,13 @@ const Register = () => {
               
               
               <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
-                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Gender:</Text>
+                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: -8}}></Text>
                 <Picker
                   ref={pickerRef}
-                  style = {[styles.input, {marginLeft: -10}]}
+                  style = {styles.input}
                   selectedValue={user.gender}
                   onValueChange={(itemValue, itemIndex) =>
+                   
                     setUser({...user, gender: itemValue})
                   }>
                   {genders.map(item => (
@@ -486,8 +511,8 @@ const Register = () => {
                 onCancel={hideDatePicker}
               />
               ) : (
-                <View style = {{alignItems: 'center', justifyContent: 'center'}}> 
-                  <TouchableOpacity onPress={showDatePicker}  style={[styles.input, { justifyContent: 'center'}]}>
+                <View style = {[styles.input, {alignItems: 'flex-start'}]}> 
+                  <TouchableOpacity onPress={showDatePicker} style = {{marginTop: 7}}>
                     <Text style={{color: '#acadac'}}>{user.dateOfBirth ? user.dateOfBirth : 'Date of Birth'}</Text>
                   </TouchableOpacity>
                   {isDatePickerVisible && (
@@ -503,7 +528,7 @@ const Register = () => {
               )}
 
               <TextInput
-                style={[styles.input, { margin: 15 }]}
+                style={styles.input}
                 placeholder="Student ID eg. 0121*******D"
                 placeholderTextColor="#acadac"
                 value={user.studentID}
@@ -517,10 +542,10 @@ const Register = () => {
         return (
           <>
             <View>
-              <Text style={[styles.textMedium, { color: '#acadac', marginLeft: 20 }]}>Academic Details</Text>
+              <Text style={[styles.textMedium, { color: '#acadac'}]}>Academic Details</Text>
              
               <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
-                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Faculty:</Text>
+                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 10}}></Text>
                 <Picker
                   ref={pickerRef}
                   style = {[styles.input, {marginLeft: -10}]}
@@ -535,7 +560,7 @@ const Register = () => {
               </View>
           
               <TouchableOpacity onPress={() => setModalVisible(true)}  style={[styles.input, {justifyContent: 'center'}]}>
-                <Text style = {{color: '#acadac', justifyContent: 'center'}}>{"Select department" ? `Department: ${user.department}` : null}</Text>
+                <Text style = {{color: '#acadac', justifyContent: 'center'}}> {user.department}</Text>
               </TouchableOpacity>
 
               <Modal
@@ -584,16 +609,16 @@ const Register = () => {
 
               <TextInput
                 style={styles.input}
-                placeholder="Program"
+                placeholder= "Program of study eg. HND - Computer Science"
                 placeholderTextColor="#acadac"
                 value={user.program}
                 onChangeText={(text) => setUser({ ...user, program: text })}
               />
               <View style = {[styles.input, {flexDirection: 'row', alignItems: 'center', justifyContent: 'center',}]}>
-                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: 70}}>Level:</Text>
+                <Text style = {{color: '#acadac', fontSize: 15, textAlign: 'center', marginLeft: -8}}></Text>
                 <Picker
                   ref={pickerRef}
-                  style = {[styles.input, {marginLeft: -10}]}
+                  style = {styles.input}
                   selectedValue={user.level}
                   onValueChange={(itemValue, itemIndex) =>
                       setUser({...user, level: itemValue})
@@ -634,7 +659,7 @@ const Register = () => {
             <View style={{ marginTop: 15 }}>
               <Text style={[styles.textMedium, { textAlign: 'left', marginLeft: 20 }]}>Contact Information</Text>
               <TextInput
-                style={[styles.input, { margin: 15 }]}
+                style={styles.input}
                 placeholder="Email"
                 placeholderTextColor="#acadac"
                 value={user.email}
@@ -642,7 +667,7 @@ const Register = () => {
               />
               <View>
                 <TextInput
-                  style={[styles.input, { margin: 15 }]}
+                  style={styles.input}
                   placeholder="Password"
                   secureTextEntry={!isVisible}
                   placeholderTextColor="#acadac"
@@ -662,7 +687,7 @@ const Register = () => {
               </View>
               
               <TextInput
-                style={[styles.input, { margin: 15 }]}
+                style={styles.input}
                 placeholder="Phone Number"
                 placeholderTextColor="#acadac"
                 value={user.phoneNumber}
@@ -730,10 +755,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 50,
     height: 50,
-    backgroundColor: '#0CEEF2',
     borderRadius: 70,
     borderWidth: 0.5,
-    borderColor: '#f2f2f2',
+    
   },
   textMedium: {
     color: 'white',

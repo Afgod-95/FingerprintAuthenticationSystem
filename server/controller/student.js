@@ -212,6 +212,32 @@ login: async (req, res) => {
     });
   }
 },
+
+getStudentID: async (req, res) => {
+  try{
+    const { studentId } = req.params
+
+    const student = await studentData.findById({ _id: studentId })
+    if (student){
+      res.status(200).json({
+        message: `Student ID found successfully \n Student ID: ${studentId}`,
+        student
+      })
+    }
+
+    else{
+      res.status(200).json({
+        message: `Student ID not found\n Student ID: ${studentId}`,
+        student
+      })
+    }
+  }
+  catch (error){
+    res.status(500).json({
+      error: error.message
+    })
+  }
+}
 };
 
 module.exports = fingerprintController;

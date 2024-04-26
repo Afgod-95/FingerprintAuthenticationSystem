@@ -55,7 +55,7 @@ const Home = () => {
       <View style = {styles.topContainer}>
           <Text style = {styles.headerText}>Student Data</Text>
           <LinearGradient
-            colors={['#0CEEF2', '#E400F8', 'transparent']}
+            colors={['#0CEEF2', '#fff', 'transparent']}
             start={{ x: 1, y: 0.1 }}
             end={{ x: 0.8, y: 1 }}
             style={styles.gradientBorder}

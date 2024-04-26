@@ -1,4 +1,5 @@
 export const departments = [
+    "Please select your department",
     "Dept. of Computer Science",
     "Dept. of Mechanical Engineering",
     "Dept. of Electrical/Electronic Engineering",
@@ -18,6 +19,7 @@ export const departments = [
 ];
 
 export const faculties = [
+    "Please select your faculty",
     "Faculty of Applied Science",
     "Faculty of Engineering",
     "Faculty of Built Environment",
@@ -26,14 +28,15 @@ export const faculties = [
 ]
 
 export const genders = [
-    "Male", "Female"
+    "Select gender","Male", "Female"
 ]
 
 export const levels = [
-    "L100",
-    "L200",
-    "L300",
-    "L400"
+    "Select level of education",
+    "Level 100",
+    "Level 200",
+    "Level 300",
+    "Level 400"
 ]
 
 // Function to get dates from 2012 to current date
