@@ -21,7 +21,7 @@ const Home = () => {
       const id = route.params?.studentID
       await axios.get(`https://fingerprintenabled.onrender.com/api/student/${id}`)
         .then((response) => {
-          console.log(response.data)
+          console.log(response.data.student)
           setStudentData(response.data.student)
         }).catch(error => {
         console.log(error.message)
@@ -41,13 +41,10 @@ const Home = () => {
             end={{ x: 0.8, y: 1 }}
             style={styles.gradientBorder}
           >
-            {studentData?.profilePic ? (
+            
               <TouchableOpacity onPress={toggleModal}>
                 <Image source={ studentData?.profilePic } style={styles.image} />
               </TouchableOpacity>
-            ) : (
-              <Text style={{ color: 'white' }}>No profile picture</Text>
-            )}
           </LinearGradient>
         </View>
         <ScrollView showsVerticalScrollIndicator = {true}>
@@ -55,7 +52,7 @@ const Home = () => {
             <Text style = {styles.textMedium}>Basic Information</Text>
             <Text style = {styles.textSmall}>Name:   { studentData?.name }</Text>
             <Text style = {styles.textSmall}>Date of birth: { studentData?.dateOfBirth }</Text>
-            <Text style = {styles.textSmall}>Gender: {studentData?.profilePic }</Text>
+            <Text style = {styles.textSmall}>Gender: {studentData?.gender }</Text>
           </View>
           <View style = {{margin: 15,}}>
             <Text style = {styles.textMedium}>Contact Information</Text>

@@ -52,130 +52,133 @@ const upload = multer({ storage: storage });
 const fingerprintController = {
   register: async (req, res) => {
     try {
-      upload.single('profilePic')(req, res, async (err) => {
-          if (err) {
-              console.error('Error uploading file:', err);
-              return res.status(500).json({ error: 'Failed to upload file' });
-          }
+        upload.single('profilePic')(req, res, async (err) => {
+            if (err) {
+                console.error('Error uploading file:', err);
+                return res.status(500).json({ error: 'Failed to upload file' });
+            }
 
-          const profilePicPath = req.file ? req.file.path : null; 
+            const profilePicPath = req.file ? req.file.path : null; 
 
-          try {
-              const {
-                name,
-                gender,
-                dateOfBirth,
-                studentID,
-                email,
-                password,
-                phoneNumber,
-                department,
-                faculty,
-                program,
-                level,
-                yearOfEnrollment
-              } = req.body;
+            try {
+                const {
+                  name,
+                  gender,
+                  dateOfBirth,
+                  studentID,
+                  email,
+                  password,
+                  phoneNumber,
+                  department,
+                  faculty,
+                  program,
+                  level,
+                  yearOfEnrollment
+                } = req.body;
 
-              const fingerprint = req.body.fingerprint || '';
+                const fingerprint = req.body.fingerprint || '';
 
-              console.log(typeof fingerprint)
+                console.log(typeof fingerprint)
 
-              if (!req.file) {
-                  return res.status(401).json({
-                      error: "Profile picture required"
-                  });
-              }
-
-              if (!name || !gender || !dateOfBirth || !studentID || !email || !password || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
-                  return res.status(401).json({
-                      error: 'All fields are required',
-                  });
-              }
-
-              if (!emailFormat.test(email)) {
-                return res.status(401).json({
-                  error: 'Invalid email format',
-                });
-              }
-
-              if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
-                return res.status(401).json({
-                    error: 'Invalid mobile number',
-                });
-              }
-
-              const exist = await studentData.findOne({ email });
-              if (exist && exist.phoneNumber === phoneNumber) {
-                return res.status(401).json({
-                    error: 'Email and phone number already exist',
-                });
-              }
-              
-              const studentIdExist = await studentData.findOne({ studentID: studentID })
-              if (studentIdExist){
-                return res.status(401).json({
-                  error: 'Student Index already exist'
-                })
-              }
-
-              const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
-              const hashedPassword = await bcrypt.hash(password, 12)
-              if (!profilePicPath) {
-                  return res.status(401).json({ error: 'Profile picture path is missing' });
-              }
-              const profilePicData = await fs.readFile(profilePicPath); 
-              const imageData = Buffer.from(profilePicData, 'base64'); // Fixed this line
-              const fileName = Date.now() + '.jpg'; // Change the extension if needed
-              const filePath = path.join(destinationFolder, fileName); // Fixed this line
-              fs.writeFile(filePath, imageData, async (err) => { // Moved this block inside the try block
-                if (err) {
-                  console.error('Error writing decoded image:', err);
-                } else {
-                  console.log('Decoded image saved successfully:', filePath);
-                  const newStudent = new studentData({
-                    profilePic: fileName, // Changed to store file name instead of image data
-                    name,
-                    gender,
-                    dateOfBirth,
-                    studentID,
-                    email,
-                    password: hashedPassword,
-                    phoneNumber,
-                    department,
-                    faculty,
-                    program,
-                    level,
-                    yearOfEnrollment,
-                    fingerPrintData: true,
-                    fingerprint: hashedFingerprint,
-                  });
-
-                  await newStudent.save();
-
-                  if (newStudent) {
-                    const token = generateToken(newStudent._id);
-                    res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
-                    console.log('Registration successful', newStudent);
-                  } else {
-                    res.status(500).json({ error: 'Failed to register user' });
-                  }
+                if (!req.file) {
+                    return res.status(401).json({
+                        error: "Profile picture required"
+                    });
                 }
+
+                if (!name || !gender || !dateOfBirth || !studentID || !email || !password || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
+                    return res.status(401).json({
+                        error: 'All fields are required',
+                    });
+                }
+
+                if (!emailFormat.test(email)) {
+                  return res.status(401).json({
+                    error: 'Invalid email format',
+                  });
+                }
+
+                if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
+                  return res.status(401).json({
+                      error: 'Invalid mobile number',
+                  });
+                }
+
+                const exist = await studentData.findOne({ email });
+                if (exist && exist.phoneNumber === phoneNumber) {
+                  return res.status(401).json({
+                      error: 'Email and phone number already exist',
+                  });
+                }
+                
+                const studentIdExist = await studentData.findOne({ studentID: studentID })
+                if (studentIdExist){
+                  return res.status(401).json({
+                    error: 'Student Index already exist'
+                  })
+                }
+
+                const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
+                const hashedPassword = await bcrypt.hash(password, 12)
+                if (!profilePicPath) {
+                    return res.status(401).json({ error: 'Profile picture path is missing' });
+                }
+                const profilePicData = await fs.readFile(profilePicPath); 
+                const imageData = Buffer.from(base64Image, 'base64');
+                const filePath = path.join(__dirname, 'decoded_image.jpg'); 
+                fs.writeFile(filePath, imageData, (err) => {
+                  if (err) {
+                    console.error('Error writing decoded image:', err);
+                  } else {
+                    console.log('Decoded image saved successfully:', filePath);
+                  }
+                });
+                if (!profilePicData) {
+                    return res.status(401).json({ error: 'Failed to read profile picture data' });
+                }
+                const base64Image = profilePicData.toString('base64');
+                const newStudent = new studentData({
+                  profilePic: base64Image,
+                  name,
+                  gender,
+                  dateOfBirth,
+                  studentID,
+                  email,
+                  password: hashedPassword,
+                  phoneNumber,
+                  department,
+                  faculty,
+                  program,
+                  level,
+                  yearOfEnrollment,
+                  fingerPrintData: true,
+                  fingerprint: hashedFingerprint,
               });
-          } 
-          catch (error) {
-            console.error(`Error: ${error.message}`);
-            res.status(500).json({
-              error: 'Internal Server Error',
-            });
-          }
+
+              await newStudent.save();
+
+              if (newStudent) {
+                const token = generateToken(newStudent._id);
+                res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
+                console.log('Registration successful', newStudent);
+              } else {
+                res.status(500).json({ error: 'Failed to register user' });
+              }
+            } 
+            catch (error) {
+              console.error(`Error: ${error.message}`);
+              res.status(500).json({
+                error: 'Internal Server Error',
+              });
+            }
+        });
+    } 
+    catch (error) {
+      console.error(`Error: ${error.message}`);
+      res.status(500).json({
+          error: 'Internal Server Error',
       });
-  } 
-  catch (error) {
-    console.error(`Error: ${error.message}`);
-    res.status(500).json({
-        error: 'Internal Server Error',
-    });
-  }
+    }
   },
 
   login: async (req, res) => {
