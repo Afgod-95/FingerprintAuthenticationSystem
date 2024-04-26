@@ -217,7 +217,7 @@ getStudentID: async (req, res) => {
   try{
     const { studentId } = req.params
 
-    const student = await studentData.findById({ _id: studentId })
+    const student = await studentData.find({ studentID: studentId })
     if (student){
       res.status(200).json({
         message: `Student ID found successfully \n Student ID: ${studentId}`,
