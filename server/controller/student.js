@@ -171,73 +171,72 @@ const fingerprintController = {
           error: 'Internal Server Error',
       });
     }
-},
+  },
 
-login: async (req, res) => {
-  try {
-    const { fingerprint, studentID, password } = req.body;
-    if (!studentID || !password){
-      return res.status(400).json({ 
-        error: "Please enter all fields"
+  login: async (req, res) => {
+    try {
+      const { fingerprint, studentID, password } = req.body;
+      if (!studentID || !password){
+        return res.status(400).json({ 
+          error: "Please enter all fields"
+        });
+      }
+      // Get user by email
+      const studentIDNo = await studentData.findOne({ studentID });
+      if (!studentIDNo) {
+        return res.status(401).json({
+          error: "Student ID not found",
+        });
+      }
+
+      const passwordMatch = await bcrypt.compare(password, studentIDNo.password);
+
+      if (!passwordMatch) {
+        return res.status(401).json({
+          error: 'Invalid password',
+        });
+      }
+
+      // Hash the provided fingerprint data
+      const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
+      const exist = await studentData.findOne({ studentID: studentID });
+      const token = generateToken(exist._id);
+      console.log(token)
+      res.status(200).json({ success: true,
+        message: "Login successfull", token
+      });
+    } catch (error) {
+      console.error(`Error: ${error.message}`);
+      res.status(500).json({
+        error: error.message,
       });
     }
-    // Get user by email
-    const studentIDNo = await studentData.findOne({ studentID });
-    if (!studentIDNo) {
-      return res.status(401).json({
-        error: "Student ID not found",
+  },
+
+  getStudentID: async (req, res) => {
+    try {
+      const { studentId } = req.params;
+
+      const student = await studentData.findOne({ studentID: studentId });
+
+      if (student) {
+        res.status(200).json({
+          message: `Student ID found successfully \n Student ID: ${studentId}`,
+          student
+        });
+      } else {
+        res.status(200).json({
+          message: `Student ID not found\n Student ID: ${studentId}`,
+          student: null 
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        error: error.message
       });
     }
-
-    const passwordMatch = await bcrypt.compare(password, studentIDNo.password);
-
-    if (!passwordMatch) {
-      return res.status(401).json({
-        error: 'Invalid password',
-      });
-    }
-
-    // Hash the provided fingerprint data
-    const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
-    const exist = await studentData.findOne({ studentID: studentID });
-    const token = generateToken(exist._id);
-    console.log(token)
-    res.status(200).json({ success: true,
-      message: "Login successfull", token
-    });
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    res.status(500).json({
-      error: error.message,
-    });
   }
-},
 
-getStudentID: async (req, res) => {
-  try{
-    const { studentId } = req.params
-
-    const student = await studentData.find({ studentID: studentId })
-    if (student){
-      res.status(200).json({
-        message: `Student ID found successfully \n Student ID: ${studentId}`,
-        student
-      })
-    }
-
-    else{
-      res.status(200).json({
-        message: `Student ID not found\n Student ID: ${studentId}`,
-        student
-      })
-    }
-  }
-  catch (error){
-    res.status(500).json({
-      error: error.message
-    })
-  }
-}
 };
 
 module.exports = fingerprintController;
