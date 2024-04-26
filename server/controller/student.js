@@ -124,13 +124,21 @@ const fingerprintController = {
                     return res.status(401).json({ error: 'Profile picture path is missing' });
                 }
                 const profilePicData = await fs.readFile(profilePicPath); 
+                const imageData = Buffer.from(base64Image, 'base64');
+                const filePath = path.join(__dirname, 'decoded_image.jpg'); 
+                fs.writeFile(filePath, imageData, (err) => {
+                  if (err) {
+                    console.error('Error writing decoded image:', err);
+                  } else {
+                    console.log('Decoded image saved successfully:', filePath);
+                  }
+                });
                 if (!profilePicData) {
                     return res.status(401).json({ error: 'Failed to read profile picture data' });
                 }
-                const base64Image = profilePicData.toString('base64'); 
-                console.log(`ProfileImage: ${base64Image}`)
+                const base64Image = profilePicData.toString('base64');
                 const newStudent = new studentData({
-                  profilePic: base64Image,
+                  profilePic: imageData,
                   name,
                   gender,
                   dateOfBirth,
