@@ -4,6 +4,6 @@ const router = express.Router()
 
 router.post('/api/auth/login', fingerprintController.login)
 router.post('/api/auth/register', fingerprintController.register)
-router.post('/api/student/:id', fingerprintController.getStudentID)
+router.get('/api/student/:id', fingerprintController.getStudentID)
 
 module.exports = router
