@@ -124,46 +124,43 @@ const fingerprintController = {
                     return res.status(401).json({ error: 'Profile picture path is missing' });
                 }
                 const profilePicData = await fs.readFile(profilePicPath); 
-                const imageData = Buffer.from(base64Image, 'base64');
-                const filePath = path.join(__dirname, 'decoded_image.jpg'); 
-                fs.writeFile(filePath, imageData, (err) => {
+                const imageData = Buffer.from(profilePicData, 'base64'); // Fixed this line
+                const fileName = Date.now() + '.jpg'; // Change the extension if needed
+                const filePath = path.join(destinationFolder, fileName); // Fixed this line
+                fs.writeFile(filePath, imageData, async (err) => { // Moved this block inside the try block
                   if (err) {
                     console.error('Error writing decoded image:', err);
                   } else {
                     console.log('Decoded image saved successfully:', filePath);
+                    const newStudent = new studentData({
+                      profilePic: fileName, // Changed to store file name instead of image data
+                      name,
+                      gender,
+                      dateOfBirth,
+                      studentID,
+                      email,
+                      password: hashedPassword,
+                      phoneNumber,
+                      department,
+                      faculty,
+                      program,
+                      level,
+                      yearOfEnrollment,
+                      fingerPrintData: true,
+                      fingerprint: hashedFingerprint,
+                    });
+
+                    await newStudent.save();
+
+                    if (newStudent) {
+                      const token = generateToken(newStudent._id);
+                      res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
+                      console.log('Registration successful', newStudent);
+                    } else {
+                      res.status(500).json({ error: 'Failed to register user' });
+                    }
                   }
                 });
-                if (!profilePicData) {
-                    return res.status(401).json({ error: 'Failed to read profile picture data' });
-                }
-                const base64Image = profilePicData.toString('base64');
-                const newStudent = new studentData({
-                  profilePic: imageData,
-                  name,
-                  gender,
-                  dateOfBirth,
-                  studentID,
-                  email,
-                  password: hashedPassword,
-                  phoneNumber,
-                  department,
-                  faculty,
-                  program,
-                  level,
-                  yearOfEnrollment,
-                  fingerPrintData: true,
-                  fingerprint: hashedFingerprint,
-              });
-
-              await newStudent.save();
-
-              if (newStudent) {
-                const token = generateToken(newStudent._id);
-                res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
-                console.log('Registration successful', newStudent);
-              } else {
-                res.status(500).json({ error: 'Failed to register user' });
-              }
             } 
             catch (error) {
               console.error(`Error: ${error.message}`);
@@ -179,7 +176,7 @@ const fingerprintController = {
           error: 'Internal Server Error',
       });
     }
-  },
+  }
 
   login: async (req, res) => {
     try {
