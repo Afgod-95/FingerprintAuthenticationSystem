@@ -35,6 +35,8 @@ const Register = () => {
     enrollmentYear: '',
   });
 
+  const [currentDate, setCurrentDate] = useState(new Date())
+
   const [isLoading, setIsLoading] = useState(false)
 
   const pickerRef = useRef();
@@ -169,18 +171,20 @@ const Register = () => {
   // Data submission
   const submitData = async () => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
+  
       // Check if fingerprint authentication is supported and enrolled
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       if (!hasHardware) {
         Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-        setIsLoading(false)
+        setIsLoading(false);
         return;
       }
+  
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
       if (!isEnrolled) {
         Alert.alert('Error', 'No fingerprint enrolled on this device.');
-        setIsLoading(false)
+        setIsLoading(false);
         return;
       }
   
@@ -198,14 +202,14 @@ const Register = () => {
         const formData = new FormData();
   
         // Append image file to FormData if user profile is not empty
-        if (user.profile) {
-          const localUri = user.profile;
-          const filename = localUri.split('/').pop();
-          const match = /\.(\w+)$/.exec(filename);
-          const type = match ? `image/${match[1]}` : `image`;
-  
-          formData.append('profilePic', { uri: localUri, name: filename, type });
-        }
+      if (user.profile) {
+        const localUri = user.profile;
+        const filename = localUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+
+        formData.append('profilePic[0][image]', { uri: localUri, name: filename, type });
+      }
   
         // Append other form data
         formData.append('name', user.name);
@@ -222,63 +226,35 @@ const Register = () => {
         formData.append('yearOfEnrollment', user.enrollmentYear);
         formData.append('fingerprint', fingerPrint);
   
-        const requestData = {
-          profilePic: user.profile,
-          name: user.name,
-          gender: user.gender,
-          dateOfBirth: user.dateOfBirth,
-          studentID: user.studentID,
-          email: user.email,
-          password: user.password,
-          phoneNumber: user.phoneNumber,
-          department: user.department,
-          faculty: user.faculty,
-          program: user.program,
-          level: user.level,
-          yearOfEnrollment: user.enrollmentYear,
-          fingerprint: fingerPrint,
-        };
         const response = await axios.post(backendURL, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
+  
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error}`);
-          setIsLoading(false)
-        } 
-        else if (response.status === 200) {
-          console.log("Navigating to home screen")
+        } else if (response.status === 200) {
+          console.log("Navigating to home screen");
           const { token } = response.data;
-          console.log(`Request data: ${JSON.stringify(requestData)}`);
           console.log(`token: ${token}`);
           if (token) {
-            await AsyncStorage.setItem('token', token);  
+            await AsyncStorage.setItem('token', token);
             navigate.navigate('Login');
-          } 
-          else {
+          } else {
             console.log('Error: Token is undefined or null');
             Alert.alert('Error', 'Token is undefined or null');
           }
-          setIsLoading(false)
         }
       } else {
-
         Alert.alert('Error', 'Fingerprint authentication failed');
-        setIsLoading(false)
       }
     } catch (error) {
-      if (error.response) {
-        console.log(error.response.data);
-        Alert.alert('Error', error.response.data.error);
-      } else if (error.request) {
-        console.log('Request made but no response received.');
-      } 
-      else if (error.message){
-        console.log(error.message);
-      }
-      setIsLoading(false)
+      console.error(error);
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -495,27 +471,35 @@ const Register = () => {
               
 
               {Platform.OS === 'ios' ? (
-              <DateTimePickerModal 
-                isVisible = {isDatePickerVisible}
-                mode='date'
-                onConfirm={handleConfirm}
-                onCancel={hideDatePicker}
-              />
-              ) : (
-                <View style = {[styles.input, {alignItems: 'flex-start'}]}> 
-                  <TouchableOpacity onPress={showDatePicker} style = {{marginTop: 7}}>
+                <Pressable onPress={showDatePicker} style = {[styles.input, {alignItems: 'flex-start'}]}> 
+                  <View  style = {{marginTop: 7}}>
                     <Text style={{color: '#acadac'}}>{user.dateOfBirth ? user.dateOfBirth : 'Date of Birth'}</Text>
-                  </TouchableOpacity>
+                  </View>
                   {isDatePickerVisible && (
                     <DateTimePickerModal 
-                    isVisible = {isDatePickerVisible}
-                    mode='date'
-                    onConfirm={handleConfirm}
-                    onCancel={hideDatePicker}
-                  
-                  />
+                      isVisible = {isDatePickerVisible}
+                      mode='date'
+                      maximumDate={currentDate}
+                      onConfirm={handleConfirm}
+                      onCancel={hideDatePicker}
+                    />
                   )}
-                </View>
+                </Pressable>
+              ) : (
+                <Pressable onPress={showDatePicker} style = {[styles.input, {alignItems: 'flex-start'}]}> 
+                  <View  style = {{marginTop: 7}}>
+                    <Text style={{color: '#acadac'}}>{user.dateOfBirth ? user.dateOfBirth : 'Date of Birth'}</Text>
+                  </View>
+                  {isDatePickerVisible && (
+                    <DateTimePickerModal 
+                      isVisible = {isDatePickerVisible}
+                      mode='date'
+                      maximumDate={currentDate}
+                      onConfirm={handleConfirm}
+                      onCancel={hideDatePicker}
+                    />
+                  )}
+                </Pressable>
               )}
 
               <TextInput

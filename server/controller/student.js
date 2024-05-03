@@ -52,7 +52,7 @@ const upload = multer({ storage: storage });
 const fingerprintController = {
   register: async (req, res) => {
     try {
-      upload.single('profilePic')(req, res, async (err) => {
+      upload.single('profilePic[0][image]')(req, res, async (err) => {
         if (err) {
           console.error('Error uploading file:', err);
           return res.status(500).json({ error: 'Failed to upload file' });
