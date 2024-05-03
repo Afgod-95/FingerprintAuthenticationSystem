@@ -52,135 +52,97 @@ const upload = multer({ storage: storage });
 const fingerprintController = {
   register: async (req, res) => {
     try {
-        upload.single('profilePic')(req, res, async (err) => {
-            if (err) {
-                console.error('Error uploading file:', err);
-                return res.status(500).json({ error: 'Failed to upload file' });
-            }
+      upload.single('profilePic')(req, res, async (err) => {
+        if (err) {
+          console.error('Error uploading file:', err);
+          return res.status(500).json({ error: 'Failed to upload file' });
+        }
 
-            const profilePicPath = req.file ? req.file.path : null; 
+        try {
+          const {
+            name,
+            gender,
+            dateOfBirth,
+            studentID,
+            email,
+            password,
+            phoneNumber,
+            department,
+            faculty,
+            program,
+            level,
+            yearOfEnrollment
+          } = req.body;
 
-            try {
-                const {
-                  name,
-                  gender,
-                  dateOfBirth,
-                  studentID,
-                  email,
-                  password,
-                  phoneNumber,
-                  department,
-                  faculty,
-                  program,
-                  level,
-                  yearOfEnrollment
-                } = req.body;
+          if (!req.file) {
+            return res.status(401).json({
+              error: "Profile picture required"
+            });
+          }
 
-                const fingerprint = req.body.fingerprint || '';
+          // Check for other required fields...
 
-                console.log(typeof fingerprint)
+          const exist = await studentData.findOne({ email });
+          if (exist && exist.phoneNumber === phoneNumber) {
+            return res.status(401).json({
+              error: 'Email and phone number already exist',
+            });
+          }
 
-                if (!req.file) {
-                    return res.status(401).json({
-                        error: "Profile picture required"
-                    });
-                }
+          const studentIdExist = await studentData.findOne({ studentID: studentID });
+          if (studentIdExist) {
+            return res.status(401).json({
+              error: 'Student Index already exist'
+            });
+          }
 
-                if (!name || !gender || !dateOfBirth || !studentID || !email || !password || !phoneNumber || !department || !faculty || !program || !level || !yearOfEnrollment) {
-                    return res.status(401).json({
-                        error: 'All fields are required',
-                    });
-                }
+          const hashedPassword = await bcrypt.hash(password, 12);
+          const profilePicData = req.file.buffer; // Get the file buffer directly
+          const contentType = req.file.mimetype;
 
-                if (!emailFormat.test(email)) {
-                  return res.status(401).json({
-                    error: 'Invalid email format',
-                  });
-                }
+          const newStudent = new studentData({
+            proFilePic: [{ image: profilePicData, contentType: contentType }],
+            name,
+            gender,
+            dateOfBirth,
+            studentID,
+            email,
+            password: hashedPassword,
+            phoneNumber,
+            department,
+            faculty,
+            program,
+            level,
+            yearOfEnrollment,
+            fingerPrintData: true,
+            fingerprint: crypto.createHash('sha256').update(req.body.fingerprint || '').digest('hex'),
+          });
 
-                if (!ghanaPhoneNumberRegex.test(phoneNumber) || phoneNumber.length !== 10) {
-                  return res.status(401).json({
-                      error: 'Invalid mobile number',
-                  });
-                }
+          await newStudent.save();
 
-                const exist = await studentData.findOne({ email });
-                if (exist && exist.phoneNumber === phoneNumber) {
-                  return res.status(401).json({
-                      error: 'Email and phone number already exist',
-                  });
-                }
-                
-                const studentIdExist = await studentData.findOne({ studentID: studentID })
-                if (studentIdExist){
-                  return res.status(401).json({
-                    error: 'Student Index already exist'
-                  })
-                }
-
-                const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
-                const hashedPassword = await bcrypt.hash(password, 12)
-                if (!profilePicPath) {
-                    return res.status(401).json({ error: 'Profile picture path is missing' });
-                }
-                const profilePicData = await fs.readFile(profilePicPath); 
-                const imageData = Buffer.from(base64Image, 'base64');
-                const filePath = path.join(__dirname, 'decoded_image.jpg'); 
-                fs.writeFile(filePath, imageData, (err) => {
-                  if (err) {
-                    console.error('Error writing decoded image:', err);
-                  } else {
-                    console.log('Decoded image saved successfully:', filePath);
-                  }
-                });
-                if (!profilePicData) {
-                    return res.status(401).json({ error: 'Failed to read profile picture data' });
-                }
-                const base64Image = profilePicData.toString('base64');
-                const newStudent = new studentData({
-                  profilePic: base64Image,
-                  name,
-                  gender,
-                  dateOfBirth,
-                  studentID,
-                  email,
-                  password: hashedPassword,
-                  phoneNumber,
-                  department,
-                  faculty,
-                  program,
-                  level,
-                  yearOfEnrollment,
-                  fingerPrintData: true,
-                  fingerprint: hashedFingerprint,
-              });
-
-              await newStudent.save();
-
-              if (newStudent) {
-                const token = generateToken(newStudent._id);
-                res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
-                console.log('Registration successful', newStudent);
-              } else {
-                res.status(500).json({ error: 'Failed to register user' });
-              }
-            } 
-            catch (error) {
-              console.error(`Error: ${error.message}`);
-              res.status(500).json({
-                error: 'Internal Server Error',
-              });
-            }
-        });
-    } 
-    catch (error) {
+          if (newStudent) {
+            const token = generateToken(newStudent._id);
+            res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
+            console.log('Registration successful', newStudent);
+          } else {
+            res.status(500).json({ error: 'Failed to register user' });
+          }
+        } catch (error) {
+          console.error(`Error: ${error.message}`);
+          res.status(500).json({
+            error: 'Internal Server Error',
+          });
+        }
+      });
+    } catch (error) {
       console.error(`Error: ${error.message}`);
       res.status(500).json({
-          error: 'Internal Server Error',
+        error: 'Internal Server Error',
       });
     }
   },
 
+  //login endpoint for student
   login: async (req, res) => {
     try {
       const { fingerprint, studentID, password } = req.body;
@@ -221,6 +183,7 @@ const fingerprintController = {
     }
   },
 
+  //fetching student data
   getStudentID: async (req, res) => {
     try {
       const { id } = req.params;
