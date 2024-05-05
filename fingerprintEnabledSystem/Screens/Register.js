@@ -119,9 +119,8 @@ const Register = () => {
     hideDatePicker();
   };
 
-  // Image Picker
   const pickImage = async () => {
-  // Show options for selecting image from camera or file system
+    // Show options for selecting image from camera or file system
     Alert.alert(
       'Select Image Source',
       'Choose the source of the image',
@@ -140,6 +139,7 @@ const Register = () => {
               quality: 1,
             });
 
+  
             handleImagePickerResult(result);
           },
         },
@@ -152,7 +152,7 @@ const Register = () => {
               aspect: [4, 3],
               quality: 1,
             });
-
+  
             handleImagePickerResult(result);
           },
         },
@@ -165,10 +165,11 @@ const Register = () => {
   const handleImagePickerResult = (result) => {
     if (!result.cancelled) {
       setUser({ ...user, profile: result.uri });
+      // Upload image to firebase storage
+      console.log(`Image uri: ${result.uri}`);
     }
   };
 
-  // Data submission
   const submitData = async () => {
     try {
       setIsLoading(true);
@@ -198,39 +199,29 @@ const Register = () => {
       if (result.success) {
         const fingerPrint = result.success.toString();
   
-        // Create FormData object
-        const formData = new FormData();
+        // Construct the payload without using FormData
+        const payload = {
+          profilePic: user.profile ? {
+            uri: user.profile, // URI of the image
+            name: 'profile_image.jpg', // Name of the file
+            type: 'image/jpg', // Mime type of the image
+          } : null,
+          name: user.name,
+          gender: user.gender,
+          dateOfBirth: user.dateOfBirth,
+          studentID: user.studentID,
+          email: user.email,
+          password: user.password,
+          phoneNumber: user.phoneNumber,
+          department: user.department,
+          faculty: user.faculty,
+          program: user.program,
+          level: user.level,
+          yearOfEnrollment: user.enrollmentYear,
+          fingerprint: fingerPrint,
+        };
   
-        // Append image file to FormData if user profile is not empty
-      if (user.profile) {
-        const localUri = user.profile;
-        const filename = localUri.split('/').pop();
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
-
-        formData.append('profilePic[0][image]', { uri: localUri, name: filename, type });
-      }
-  
-        // Append other form data
-        formData.append('name', user.name);
-        formData.append('gender', user.gender);
-        formData.append('dateOfBirth', user.dateOfBirth);
-        formData.append('studentID', user.studentID);
-        formData.append('email', user.email);
-        formData.append('password', user.password);
-        formData.append('phoneNumber', user.phoneNumber);
-        formData.append('department', user.department);
-        formData.append('faculty', user.faculty);
-        formData.append('program', user.program);
-        formData.append('level', user.level);
-        formData.append('yearOfEnrollment', user.enrollmentYear);
-        formData.append('fingerprint', fingerPrint);
-  
-        const response = await axios.post(backendURL, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        const response = await axios.post(backendURL, payload);
   
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
@@ -241,6 +232,7 @@ const Register = () => {
           console.log(`token: ${token}`);
           if (token) {
             await AsyncStorage.setItem('token', token);
+            console.log(response.data.newStudent)
             navigate.navigate('Login');
           } else {
             console.log('Error: Token is undefined or null');
@@ -251,12 +243,26 @@ const Register = () => {
         Alert.alert('Error', 'Fingerprint authentication failed');
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'An unexpected error occurred');
+      if (error.response){
+        setIsLoading(false)
+        Alert.alert('Error',  error.response.data.error);
+        console.log(error.response.data)
+      }
+      else if (error.request){
+        setIsLoading(false)
+        Alert.alert('Error', error.request);
+        console.log(error.request)
+      }
+      else if (error){
+        setIsLoading(false)
+        Alert.alert('Error', error.message);
+        console.log(`Error: ${error.message}`)
+      }
     } finally {
       setIsLoading(false);
     }
   };
+  
   
 
   const handleNext = () => {
@@ -605,23 +611,24 @@ const Register = () => {
               </View>
 
               {Platform.OS === 'ios' ? (
-                <TouchableOpacity onPress={showEnrollmentDatePicker} style={[styles.input, { justifyContent: 'center' }]}>
+                <Pressable onPress={showEnrollmentDatePicker} style={[styles.input, { justifyContent: 'center' }]}>
                   <Text style={{ color: '#acadac' }}>{user.enrollmentYear ? user.enrollmentYear : 'Date of enrollment'}</Text>
-                </TouchableOpacity>
+                </Pressable>
               ) : (
-                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                  <TouchableOpacity onPress={showEnrollmentDatePicker} style={[styles.input, { justifyContent: 'center' }]}>
+                <Pressable onPress={showEnrollmentDatePicker} style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <View  style={[styles.input, { justifyContent: 'center' }]}>
                     <Text style={{ color: '#acadac' }}>{user.enrollmentYear ? user.enrollmentYear : 'Date of enrollment'}</Text>
-                  </TouchableOpacity>
+                  </View>
                   {isEnrollmentDatePickerVisible && (
                     <DateTimePickerModal
                       isVisible={isEnrollmentDatePickerVisible}
                       mode="date"
+                      maximumDate={currentDate}
                       onConfirm={handleEnrollmentConfirm}
                       onCancel={hideEnrollmentDatePicker}
                     />
                   )}
-                </View>
+                </Pressable>
               )}
 
             </View>

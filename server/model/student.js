@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const studentSchema = new mongoose.Schema({
-    proFilePic: [
+    profilePic: [
         {
           image: {
             type: Buffer,  

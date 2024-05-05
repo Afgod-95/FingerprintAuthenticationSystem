@@ -74,7 +74,7 @@ const fingerprintController = {
             yearOfEnrollment
           } = req.body;
 
-          if (!req.file) {
+          if (!req.file && !req.body.profilePic) {
             return res.status(401).json({
               error: "Profile picture required"
             });
@@ -101,7 +101,7 @@ const fingerprintController = {
           const contentType = req.file.mimetype;
 
           const newStudent = new studentData({
-            proFilePic: [{ image: profilePicData, contentType: contentType }],
+            profilePic: [{ image: profilePicData, contentType: contentType }],
             name,
             gender,
             dateOfBirth,
