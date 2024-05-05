@@ -61,7 +61,6 @@ const fingerprintController = {
 
         try {
           const {
-            profilePic,
             name,
             gender,
             dateOfBirth,
@@ -76,7 +75,7 @@ const fingerprintController = {
             yearOfEnrollment
           } = req.body;
 
-          if (!profilePic) {
+          if (!req.file) {
             return res.status(401).json({
               error: "Profile picture required"
             });
@@ -99,8 +98,8 @@ const fingerprintController = {
           }
 
           const hashedPassword = await bcrypt.hash(password, 12);
-          const profilePicData = profilePic.buffer
-          const contentType = profilePic.mimetype;
+          const profilePicData = req.file.buffer
+          const contentType = req.file.mimetype;
           
           const newStudent = new studentData({
             profilePic: { 
