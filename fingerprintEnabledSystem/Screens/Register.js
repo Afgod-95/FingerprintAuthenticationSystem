@@ -170,6 +170,8 @@ const Register = () => {
     }
   };
 
+  
+
   const submitData = async () => {
     try {
       setIsLoading(true);
@@ -199,29 +201,37 @@ const Register = () => {
       if (result.success) {
         const fingerPrint = result.success.toString();
   
-        // Construct the payload without using FormData
-        const payload = {
-          profilePic: {
-            image: user.profile,
-            contentType: 'image/jpeg',
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('profilePic', {
+          uri: user.profile,
+          type: 'image/jpeg', // Adjust the type based on your file type
+          name: 'profile.jpg', // Adjust the name based on your file name
+        });
+  
+        // Append other user data
+        formData.append('name', user.name);
+        formData.append('gender', user.gender);
+        formData.append('dateOfBirth', user.dateOfBirth)
+        formData.append('studentID', user.studentID)
+        formData.append('email', user.email)
+        formData.append('password', user.password)
+        formData.append('phoneNumber', user.phoneNumber)
+        formData.append('department', user.department)
+        formData.append('faculty', user.faculty)
+        formData.append('program', user.program)
+        formData.append('level', user.level)
+        formData.append('yearOfEnrollment', user.enrollmentYear)
+        formData.append('fingerprint', fingerPrint);
+  
+        // Make POST request
+        const response = await axios.post(backendURL, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
           },
-          name: user.name,
-          gender: user.gender,
-          dateOfBirth: user.dateOfBirth,
-          studentID: user.studentID,
-          email: user.email,
-          password: user.password,
-          phoneNumber: user.phoneNumber,
-          department: user.department,
-          faculty: user.faculty,
-          program: user.program,
-          level: user.level,
-          yearOfEnrollment: user.enrollmentYear,
-          fingerprint: fingerPrint,
-        };
-        console.log(`User Data: `, payload)
-        const response = await axios.post(backendURL, payload);
-        
+        });
+  
+        // Handle response
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error}`);
@@ -242,25 +252,15 @@ const Register = () => {
         Alert.alert('Error', 'Fingerprint authentication failed');
       }
     } catch (error) {
-      if (error.response){
-        setIsLoading(false)
-        Alert.alert('Error',  error.response.data.error);
-        console.log(error.response.data)
-      }
-      else if (error.request){
-        setIsLoading(false)
-        Alert.alert('Error', error.request);
-        console.log(error.request)
-      }
-      else if (error){
-        setIsLoading(false)
-        Alert.alert('Error', error.message);
-        console.log(`Error: ${error.message}`)
-      }
+      // Handle error
+      setIsLoading(false);
+      Alert.alert('Error', error.message);
+      console.error(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
+  
   
   
 
