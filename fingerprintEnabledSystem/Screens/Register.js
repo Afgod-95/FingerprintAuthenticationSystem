@@ -201,11 +201,10 @@ const Register = () => {
   
         // Construct the payload without using FormData
         const payload = {
-          profilePic: user.profile ? {
-            uri: user.profile, // URI of the image
-            name: 'profile_image.jpg', // Name of the file
-            type: 'image/jpg', // Mime type of the image
-          } : null,
+          profilePic: {
+            image: user.profile,
+            contentType: 'image/jpeg',
+          },
           name: user.name,
           gender: user.gender,
           dateOfBirth: user.dateOfBirth,
@@ -220,9 +219,9 @@ const Register = () => {
           yearOfEnrollment: user.enrollmentYear,
           fingerprint: fingerPrint,
         };
-  
+        console.log(`User Data: `, payload)
         const response = await axios.post(backendURL, payload);
-  
+        
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error}`);
