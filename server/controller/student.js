@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises; 
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
 
 
 const emailFormat = /^[a-zA-Z0-9_.+]*[a-zA-Z][a-zA-Z0-9_.+]*@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
@@ -16,13 +16,11 @@ const generateToken = (userId) => {
   return token;
 };
 
-
-
 const destinationFolder = 'E:/Native/FingerprintSystem/server/image'; 
 async function createDirectory() {
   try {
     await fs.mkdir(destinationFolder, { recursive: true }); 
-    console.log(destinationFolder)
+    console.log(destinationFolder);
     console.log('Directory created successfully.');
   } catch (err) {
     if (err.code !== 'EEXIST') {
@@ -51,7 +49,6 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
 }).single('profilePic[0][image]');
-
 
 const fingerprintController = {
   register: async (req, res) => {
@@ -101,8 +98,20 @@ const fingerprintController = {
           }
 
           const hashedPassword = await bcrypt.hash(password, 12);
-          const profilePicData = req.file || req.body.profilePic; // Get the file buffer directly
-          const contentType = req.file.mimetype;
+          let profilePicData, contentType;
+
+          if (req.file) {
+            profilePicData = req.file.buffer;
+            contentType = req.file.mimetype;
+          } else if (req.body.profilePic && req.body.profilePic.buffer && req.body.profilePic.mimetype) {
+            // If file data is sent directly in the request body
+            profilePicData = req.body.profilePic.buffer;
+            contentType = req.body.profilePic.mimetype;
+          } else {
+            return res.status(400).json({
+              error: "Invalid profile picture data"
+            });
+          }
 
           const newStudent = new studentData({
             profilePic: { 
@@ -148,7 +157,6 @@ const fingerprintController = {
       });
     }
   },
-
   //login endpoint for student
   login: async (req, res) => {
     try {
@@ -178,9 +186,9 @@ const fingerprintController = {
       const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
       const exist = await studentData.findOne({ studentID: studentID });
       const token = generateToken(exist._id);
-      console.log(token)
+      console.log(token);
       res.status(200).json({ success: true,
-        message: "Login successfull", token
+        message: "Login successful", token
       });
     } catch (error) {
       console.error(`Error: ${error.message}`);
@@ -189,20 +197,17 @@ const fingerprintController = {
       });
     }
   },
-
   //fetching student data
   getStudentID: async (req, res) => {
     try {
       const { id } = req.params;
-
       const student = await studentData.findOne({ studentID: id });
-
       if (student) {
         res.status(200).json({
           message: `Student ID found successfully \n Student ID: ${id}`,
           student
         });
-        console.log(student)
+        console.log(student);
       } else {
         res.status(200).json({
           message: `Student ID not found\n Student ID: ${id}`,
@@ -215,9 +220,6 @@ const fingerprintController = {
       });
     }
   }
-
 };
 
 module.exports = fingerprintController;
-
-
