@@ -75,7 +75,7 @@ const fingerprintController = {
             yearOfEnrollment
           } = req.body;
 
-          if (!req.file && !req.body.profilePic) {
+          if (!req.file ) {
             return res.status(401).json({
               error: "Profile picture required"
             });
