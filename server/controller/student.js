@@ -45,6 +45,10 @@ const storage = multer.diskStorage({
   }
 });
 
+const ProfilePicBase64 = (filePath) => {
+  const base64 = fs.readFileSync(filePath, { encoding: 'base64' });
+  return base64;
+}
 const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
@@ -98,7 +102,7 @@ const fingerprintController = {
           }
 
           const hashedPassword = await bcrypt.hash(password, 12);
-          const profilePicData = req.file.buffer
+          const profilePicData = ProfilePicBase64(req.file.buffer)
           const contentType = req.file.mimetype;
           
           const newStudent = new studentData({

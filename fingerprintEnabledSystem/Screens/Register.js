@@ -138,8 +138,8 @@ const Register = () => {
               aspect: [4, 3],
               quality: 1,
             });
-
   
+            console.log(result)
             handleImagePickerResult(result);
           },
         },
@@ -152,21 +152,20 @@ const Register = () => {
               aspect: [4, 3],
               quality: 1,
             });
-  
-            handleImagePickerResult(result);
+            
+            handleImagePickerResult(result); // Pass the result to handleImagePickerResult
           },
         },
       ],
       { cancelable: false }
     );
   };
-
+  
   // Function to handle the result of image picker
   const handleImagePickerResult = (result) => {
     if (!result.cancelled) {
-      setUser({ ...user, profile: result.uri });
-      // Upload image to firebase storage
-      console.log(`Image uri: ${result.uri}`);
+      setUser({ ...user, profile: result.assets[0].uri });
+      console.log(`Image uri: ${result.assets[0].uri}`);
     }
   };
 
@@ -202,10 +201,11 @@ const Register = () => {
         const fingerPrint = result.success.toString();
   
         // Create FormData object
-        const formData = new FormData();
+       /* const formData = new FormData();
+        // Append profile image
         formData.append('profilePic', {
-          uri: user.profile,
-          type: 'image/jpeg', // Adjust the type based on your file type
+          image: user.profile,
+          contentType: 'image/jpeg', // Adjust the type based on your file type
           name: 'profile.jpg', // Adjust the name based on your file name
         });
   
@@ -223,11 +223,32 @@ const Register = () => {
         formData.append('level', user.level)
         formData.append('yearOfEnrollment', user.enrollmentYear)
         formData.append('fingerprint', fingerPrint);
+        */
+
+        const userData = {
+          profilePic: {
+            image: user.profile,
+            contentType: 'image/jpeg', // Adjust the type based on your file type
+          },
+          name: user.name,
+          gender: user.gender,
+          dateOfBirth: user.dateOfBirth,
+          studentID: user.studentID,
+          email: user.email,
+          password: user.password,
+          phoneNumber: user.phoneNumber,
+          department: user.department,
+          faculty: user.faculty,
+          program: user.program,
+          level: user.level,
+          yearOfEnrollment: user.enrollmentYear,
+          fingerprint: fingerPrint,
+        };
   
         // Make POST request
-        const response = await axios.post(backendURL, formData, {
+        const response = await axios.post(backendURL, userData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
         });
   
