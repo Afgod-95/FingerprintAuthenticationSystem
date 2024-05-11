@@ -162,12 +162,39 @@ const Register = () => {
   };
   
   // Function to handle the result of image picker
-  const handleImagePickerResult = (result) => {
+  const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
+      const base64Image = await convertImageToBase64(result.assets[0].uri);
       setUser({ ...user, profile: result.assets[0].uri });
       console.log(`Image uri: ${result.assets[0].uri}`);
     }
   };
+
+  // Function to convert image to base64
+  const convertImageToBase64 = async (uri) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const base64String = await blobToBase64(blob);
+      return base64String;
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return null;
+    }
+  };
+
+  // Function to convert blob to base64
+  const blobToBase64 = async (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+      reader.readAsDataURL(blob);
+    });
+  };
+
 
   
 
@@ -201,7 +228,7 @@ const Register = () => {
         const fingerPrint = result.success.toString();
   
         // Create FormData object
-       /* const formData = new FormData();
+        const formData = new FormData();
         // Append profile image
         formData.append('profilePic', {
           image: user.profile,
@@ -223,8 +250,7 @@ const Register = () => {
         formData.append('level', user.level)
         formData.append('yearOfEnrollment', user.enrollmentYear)
         formData.append('fingerprint', fingerPrint);
-        */
-
+        
         const userData = {
           profilePic: {
             image: user.profile,
@@ -246,9 +272,9 @@ const Register = () => {
         };
   
         // Make POST request
-        const response = await axios.post(backendURL, userData, {
+        const response = await axios.post(backendURL, formData, {
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'multipart/form-data',
           },
         });
   

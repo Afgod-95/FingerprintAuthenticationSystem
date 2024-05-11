@@ -1,17 +1,17 @@
 const mongoose = require('mongoose')
 const studentSchema = new mongoose.Schema({
-    profilePic: [
-        {
-          image: {
-            type: Buffer,  
-            required: true
-          },
-          contentType: {
-            type: String, 
-            required: true
-          }
+    profilePic: {
+        
+        image: {
+        type: Buffer,  
+        required: true
+        },
+        contentType: {
+        type: String, 
+        required: true
         }
-    ],
+        
+    },
     name: {
         type: String,
         required: true
