@@ -3,12 +3,12 @@ const studentSchema = new mongoose.Schema({
     profilePic: {
         
         image: {
-        type: Buffer,  
-        required: true
+            type: Buffer,  
+            required: true
         },
         contentType: {
-        type: String, 
-        required: true
+            type: String, 
+            default: 'image/jpg/jpeg/png'
         }
         
     },

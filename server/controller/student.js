@@ -102,13 +102,11 @@ const fingerprintController = {
           }
 
           const hashedPassword = await bcrypt.hash(password, 12);
-          const profilePicData = ProfilePicBase64(req.file.buffer)
-          const contentType = req.file.mimetype;
+          const profilePicData = req.file.buffer
           
           const newStudent = new studentData({
             profilePic: { 
               image: profilePicData, 
-              contentType: contentType 
             },
             name,
             gender,

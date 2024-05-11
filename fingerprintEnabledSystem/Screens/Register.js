@@ -17,7 +17,7 @@ import { Picker } from '@react-native-picker/picker'
 import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
-
+import * as FileSystem from 'expo-file-system'
 const Register = () => {
   const [user, setUser] = useState({
     profile: '',
@@ -164,9 +164,18 @@ const Register = () => {
   // Function to handle the result of image picker
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
-      const base64Image = await convertImageToBase64(result.assets[0].uri);
-      setUser({ ...user, profile: result.assets[0].uri });
-      console.log(`Image uri: ${result.assets[0].uri}`);
+      const fileUri = result.assets[0].uri;
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      if (fileInfo.exists) {
+        // Define the new path where you want to copy the file
+        const newPath = FileSystem.cacheDirectory + 'croppedImage.jpg';
+        // Copy the file to the new path
+        await FileSystem.copyAsync({ from: fileUri, to: newPath });
+        setUser({ ...user, profile: newPath });
+        console.log(`Image uri: ${newPath}`);
+      } else {
+        console.log('File does not exist:', fileUri);
+      }
     }
   };
 
@@ -227,34 +236,11 @@ const Register = () => {
       if (result.success) {
         const fingerPrint = result.success.toString();
   
-        // Create FormData object
-        const formData = new FormData();
-        // Append profile image
-        formData.append('profilePic', {
-          image: user.profile,
-          contentType: 'image/jpeg', // Adjust the type based on your file type
-          name: 'profile.jpg', // Adjust the name based on your file name
-        });
-  
-        // Append other user data
-        formData.append('name', user.name);
-        formData.append('gender', user.gender);
-        formData.append('dateOfBirth', user.dateOfBirth)
-        formData.append('studentID', user.studentID)
-        formData.append('email', user.email)
-        formData.append('password', user.password)
-        formData.append('phoneNumber', user.phoneNumber)
-        formData.append('department', user.department)
-        formData.append('faculty', user.faculty)
-        formData.append('program', user.program)
-        formData.append('level', user.level)
-        formData.append('yearOfEnrollment', user.enrollmentYear)
-        formData.append('fingerprint', fingerPrint);
-        
+       
         const userData = {
           profilePic: {
             image: user.profile,
-            contentType: 'image/jpeg', // Adjust the type based on your file type
+            contentType: 'image', 
           },
           name: user.name,
           gender: user.gender,
@@ -272,11 +258,7 @@ const Register = () => {
         };
   
         // Make POST request
-        const response = await axios.post(backendURL, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        const response = await axios.post(backendURL, userData);
   
         // Handle response
         if (response.data.error) {
