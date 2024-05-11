@@ -47,7 +47,7 @@ const storage = multer.diskStorage({
 
 const ProfilePicBase64 = (filePath) => {
   const base64 = fs.readFileSync(filePath, { encoding: 'base64' });
-  return base64;
+  return base64.toString();
 }
 const upload = multer({
   storage: storage,
