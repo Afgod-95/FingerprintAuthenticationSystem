@@ -70,7 +70,14 @@ const fingerprintController = {
 
         try{
           const studentId = req.body.studentID;
-          const profileImage = req.file.buffer;
+          const profileImage = req.file && req.file.buffer;
+          if (!profileImage) {
+            return res.status(400).json({
+              error: "No profile image received"
+            });
+          }
+          console.log('Profile', profileImage)
+          
           const profilePicture = new profilePicUpload({
             studentId,
             profileImage

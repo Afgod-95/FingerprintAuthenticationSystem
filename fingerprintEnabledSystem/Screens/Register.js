@@ -204,6 +204,24 @@ const Register = () => {
 
 
   
+  useEffect(() => {
+    const uploadProfileImage = async () => {
+      await axios.post('https://fingerprintenabled.onrender.com/uploadImage', {
+        profileImage: user.profile
+      }).then(response => {
+        if(response.status === 200){
+          console.log(response.data)
+        }
+        else if (response.error){
+          console.log(response.data)
+        }
+      }).catch (err => {
+        console.log(err.message)
+      })
+    }
+    uploadProfileImage()
+  }, [])
+
 
   const submitData = async () => {
     try {
@@ -236,9 +254,6 @@ const Register = () => {
   
        
         const userData = {
-          profilePic: {
-            image: user.profile
-          },
           name: user.name,
           gender: user.gender,
           dateOfBirth: user.dateOfBirth,
