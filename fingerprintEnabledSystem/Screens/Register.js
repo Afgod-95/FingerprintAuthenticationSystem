@@ -167,9 +167,7 @@ const Register = () => {
       const fileUri = result.assets[0].uri;
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
       if (fileInfo.exists) {
-        // Define the new path where you want to copy the file
-        const newPath = FileSystem.cacheDirectory + 'croppedImage.jpg';
-        // Copy the file to the new path
+        const newPath = FileSystem.cacheDirectory + 'profileImage.jpg';
         await FileSystem.copyAsync({ from: fileUri, to: newPath });
         setUser({ ...user, profile: newPath });
         console.log(`Image uri: ${newPath}`);
@@ -239,8 +237,7 @@ const Register = () => {
        
         const userData = {
           profilePic: {
-            image: user.profile,
-            contentType: 'image', 
+            image: user.profile
           },
           name: user.name,
           gender: user.gender,
@@ -257,9 +254,13 @@ const Register = () => {
           fingerprint: fingerPrint,
         };
   
-        // Make POST request
-        const response = await axios.post(backendURL, userData);
-  
+        // Making POST request with authorization header
+        const token = await AsyncStorage.getItem('token');
+        const response = await axios.post(backendURL, userData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         // Handle response
         if (response.data.error) {
           Alert.alert('Error', response.data.error);

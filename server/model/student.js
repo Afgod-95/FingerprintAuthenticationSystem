@@ -1,17 +1,5 @@
 const mongoose = require('mongoose')
 const studentSchema = new mongoose.Schema({
-    profilePic: {
-        
-        image: {
-            type: Buffer,  
-            required: true
-        },
-        contentType: {
-            type: String, 
-            default: 'image/jpg/jpeg/png'
-        }
-        
-    },
     name: {
         type: String,
         required: true
