@@ -77,10 +77,17 @@ const fingerprintController = {
             });
           }
           console.log('Profile', profileImage)
+
+          const student = await studentData.findOne({ studentID: studentId });
+          if (!student) {
+            return res.status(404).json({
+              error: "Student not found"
+            });
+          }
           
           const profilePicture = new profilePicUpload({
-            studentId,
-            profileImage
+            studentId: student._id,
+            profileImage: profileImage
           });
       
           await profilePicture.save();

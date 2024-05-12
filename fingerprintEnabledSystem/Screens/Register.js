@@ -160,22 +160,27 @@ const Register = () => {
       { cancelable: false }
     );
   };
-  
-  // Function to handle the result of image picker
-  const handleImagePickerResult = async (result) => {
-    if (!result.cancelled) {
-      const fileUri = result.assets[0].uri;
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      if (fileInfo.exists) {
-        const newPath = FileSystem.cacheDirectory + 'profileImage.jpg';
-        await FileSystem.copyAsync({ from: fileUri, to: newPath });
-        setUser({ ...user, profile: newPath });
-        console.log(`Image uri: ${newPath}`);
-      } else {
-        console.log('File does not exist:', fileUri);
+
+  // Function to upload profile image
+  const uploadProfileImage = async (imageUri) => {
+    try {
+      const formData = new FormData()
+      formData.append('profile', imageUri)
+      const response = await axios.post('https://fingerprintenabled.onrender.com/uploadImage', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      if (response.status === 200) {
+        console.log(response.data);
+      } else if (response.error) {
+        console.log(response.data);
       }
+    } catch (error) {
+      console.log(error.message);
     }
   };
+
 
   // Function to convert image to base64
   const convertImageToBase64 = async (uri) => {
@@ -204,23 +209,26 @@ const Register = () => {
 
 
   
-  useEffect(() => {
-    const uploadProfileImage = async () => {
-      await axios.post('https://fingerprintenabled.onrender.com/uploadImage', {
-        profileImage: user.profile
-      }).then(response => {
-        if(response.status === 200){
-          console.log(response.data)
-        }
-        else if (response.error){
-          console.log(response.data)
-        }
-      }).catch (err => {
-        console.log(err.message)
-      })
+  // Move the profile image upload logic inside handleImagePickerResult
+  const handleImagePickerResult = async (result) => {
+    if (!result.cancelled) {
+      const fileUri = result.assets[0].uri;
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      if (fileInfo.exists) {
+        const newPath = FileSystem.cacheDirectory + 'profileImage.jpg';
+        await FileSystem.copyAsync({ from: fileUri, to: newPath });
+        setUser({ ...user, profile: newPath });
+        console.log(`Image uri: ${newPath}`);
+        const base64Image = convertImageToBase64(newPath)
+        console.log(base64Image)
+        // Upload the image here
+        uploadProfileImage(base64Image);
+      } else {
+        console.log('File does not exist:', fileUri);
+      }
     }
-    uploadProfileImage()
-  }, [])
+  };
+
 
 
   const submitData = async () => {
