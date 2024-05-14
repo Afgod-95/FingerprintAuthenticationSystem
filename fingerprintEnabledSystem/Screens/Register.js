@@ -20,7 +20,7 @@ import CircularLoader from '../component/CircularLoader';
 import * as FileSystem from 'expo-file-system'
 const Register = () => {
   const [user, setUser] = useState({
-    profile: '',
+    profile: null,
     name: '',
     gender: 'Select gender',
     dateOfBirth: '',

@@ -7,9 +7,6 @@ const fs = require('fs').promises;
 const bcrypt = require('bcrypt');
 const profilePicUpload = require('../model/profilePicUpload.js');
 
-const emailFormat = /^[a-zA-Z0-9_.+]*[a-zA-Z][a-zA-Z0-9_.+]*@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
-const ghanaPhoneNumberRegex = /^0[23456789]([0-9]{8})$/;
-
 const generateToken = (userId) => {
   const token = jwt.sign({ userId }, process.env.SECRET_KEY, { expiresIn: '1h' }); 
   return token;
@@ -54,7 +51,7 @@ const upload = multer({
     }
     cb(null, true);
   }
-}).single('profile');
+}).single('image');
 
 const fingerprintController = {
   //profile picture
@@ -68,9 +65,9 @@ const fingerprintController = {
           });
         }
 
-        try{
-          const studentId = req.body.studentID;
+        try {
           const profileImage = req.file && req.file.buffer;
+          const { id } = req.params
           if (!profileImage) {
             return res.status(400).json({
               error: "No profile image received"
@@ -78,7 +75,7 @@ const fingerprintController = {
           }
           console.log('Profile', profileImage)
 
-          const student = await studentData.findOne({ studentID: studentId });
+          const student = await studentData.findById({ _id: id })
           if (!student) {
             return res.status(404).json({
               error: "Student not found"
@@ -87,7 +84,9 @@ const fingerprintController = {
           
           const profilePicture = new profilePicUpload({
             studentId: student._id,
-            profileImage: profileImage
+            name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
+            data: profileImage,
+            contentType: req.file.mimetype,
           });
       
           await profilePicture.save();
@@ -153,7 +152,7 @@ const fingerprintController = {
         });
       }
   
-      // Hash the password
+
       const hashedPassword = await bcrypt.hash(password, 12);
   
       const newStudent = new studentData({
@@ -162,7 +161,7 @@ const fingerprintController = {
         dateOfBirth,
         studentID,
         email,
-        password: hashedPassword, // Use hashed password
+        password: hashedPassword, 
         phoneNumber,
         department,
         faculty,
