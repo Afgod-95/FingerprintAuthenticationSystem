@@ -6,6 +6,8 @@ const path = require('path');
 const fs = require('fs').promises; 
 const bcrypt = require('bcrypt');
 const profilePicUpload = require('../model/profilePicUpload.js');
+const { v4: uuidv4 } = require('uuid');
+
 
 const generateToken = (userId) => {
   const token = jwt.sign({ userId }, process.env.SECRET_KEY, { expiresIn: '1h' }); 
@@ -42,6 +44,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
+  storage: storage,
   limits: {
     fileSize: 1024 * 1024 * 5 // 5MB
   },
