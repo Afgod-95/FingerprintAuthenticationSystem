@@ -165,9 +165,16 @@ const Register = () => {
   const uploadProfileImage = async (imageUri) => {
     try {
       const formData = new FormData()
-      formData.append('profile', imageUri)
+      const fileName = imageUri.split('/').pop()
+      const fileType = imageUri.split('/').pop()
+      formData.append('profile', {
+        name: fileName,
+        imageUri,
+        type: `image/${fileType}`,
+      })
       const response = await axios.post('https://fingerprintenabled.onrender.com/uploadImage', formData, {
         headers: {
+          Accept: 'application/json',
           'Content-Type': 'multipart/form-data'
         }
       });
@@ -182,50 +189,18 @@ const Register = () => {
   };
 
 
-  // Function to convert image to base64
-  const convertImageToBase64 = async (uri) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const base64String = await blobToBase64(blob);
-      return base64String;
-    } catch (error) {
-      console.error('Error converting image to base64:', error);
-      return null;
-    }
-  };
-
-  // Function to convert blob to base64
-  const blobToBase64 = async (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => {
-        resolve(reader.result);
-      };
-      reader.readAsDataURL(blob);
-    });
-  };
-
-
   
+
+    
   // Move the profile image upload logic inside handleImagePickerResult
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
-      const fileUri = result.assets[0].uri;
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      if (fileInfo.exists) {
-        const newPath = FileSystem.cacheDirectory + 'profileImage.jpg';
-        await FileSystem.copyAsync({ from: fileUri, to: newPath });
-        setUser({ ...user, profile: newPath });
-        console.log(`Image uri: ${newPath}`);
-        const base64Image = convertImageToBase64(newPath)
-        console.log(base64Image)
-        // Upload the image here
-        uploadProfileImage(base64Image);
-      } else {
-        console.log('File does not exist:', fileUri);
-      }
+      const profileImage = setUser({ ...user, profile: result.assets[0].uri });
+      console.log(`Image uri: ${result.assets[0].uri }`)
+      uploadProfileImage(profileImage)
+    } 
+    else{
+      return console.log('Failed to setUserProfile')
     }
   };
 
