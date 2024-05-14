@@ -69,14 +69,14 @@ const fingerprintController = {
         }
 
         try {
-          const profileImage = req.file && req.file.buffer;
+          const profileImagePath = req.file.path;
           const { id } = req.params
-          if (!profileImage) {
+          if (!profileImagePath) {
             return res.status(400).json({
               error: "No profile image received"
             });
           }
-          console.log('Profile', profileImage)
+          console.log('Profile', profileImagePath)
 
           const student = await studentData.findById({ _id: id })
           if (!student) {
@@ -88,8 +88,8 @@ const fingerprintController = {
           const profilePicture = new profilePicUpload({
             studentId: student._id,
             name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
-            data: profileImage,
-            contentType: req.file.mimetype,
+            data: await fs.readFile(profileImagePath),
+            contentType: req.file.mimetype
           });
       
           await profilePicture.save();
