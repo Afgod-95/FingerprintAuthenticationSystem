@@ -164,40 +164,43 @@ const Register = () => {
   // Function to upload profile image
   const uploadProfileImage = async (imageUri) => {
     try {
-      const formData = new FormData()
-      const fileName = imageUri.split('/').pop()
-      const fileType = imageUri.split('/').pop()
-      formData.append('profile', {
+      
+    const formData = new FormData();
+    const fileName = imageUri.split('/').pop();
+    const match = /\.(\w+)$/.exec(fileName);
+    const fileType = match ? `image/${match[1]}` : `image`;
+  
+      formData.append('image', {
+        uri: imageUri,
         name: fileName,
-        imageUri,
-        type: `image/${fileType}`,
-      })
-      const response = await axios.post('https://fingerprintenabled.onrender.com/uploadImage', formData, {
+        type: fileType,
+      });
+  
+      const response = await axios.post('https://fingerprintenabled.onrender.com/upload-image', formData, {
         headers: {
           Accept: 'application/json',
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
+  
       if (response.status === 200) {
         console.log(response.data);
-      } else if (response.error) {
+      } else {
         console.log(response.data);
       }
     } catch (error) {
       console.log(error.message);
     }
   };
-
-
   
 
-    
-  // Move the profile image upload logic inside handleImagePickerResult
+
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
-      const profileImage = setUser({ ...user, profile: result.assets[0].uri });
-      console.log(`Image uri: ${result.assets[0].uri }`)
-      uploadProfileImage(profileImage)
+      const imageUri = result.assets[0].uri;
+      setUser({ ...user, profile: imageUri });
+      console.log(`Image uri: ${imageUri}`);
+      await uploadProfileImage(imageUri);
     } 
     else{
       return console.log('Failed to setUserProfile')
@@ -258,6 +261,9 @@ const Register = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          Accept: {
+            'Content-Type': 'application/json',
+          }
         });
         // Handle response
         if (response.data.error) {

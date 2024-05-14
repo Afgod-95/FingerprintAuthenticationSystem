@@ -78,7 +78,7 @@ const fingerprintController = {
           }
           console.log('Profile', profileImagePath)
 
-          const student = await studentData.findById({ _id: id })
+          const student = await studentData.findById(id)
           if (!student) {
             return res.status(404).json({
               error: "Student not found"
