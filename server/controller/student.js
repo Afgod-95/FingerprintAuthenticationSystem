@@ -70,12 +70,26 @@ const fingerprintController = {
 
         try {
           const profileImagePath = req.file ? req.file.path : null;
+          const { id } = req.params
           if (!profileImagePath) {
             return res.status(400).json({
               error: "No profile image received"
             });
           }
-          console.log('Profile', profileImagePath)
+
+          const student = await studentData.findById(id)
+          await profilePicUpload({
+            studentId: student._id,
+            name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
+            data: await fs.readFile(profileImagePath),
+            contentType: req.file.mimetype
+          });
+          await profilePicture.save();
+          res.status(200).json({
+            message: "Profile picture saved successfully",
+            profilePicture
+          })
+          console.log('Profile picture: ',profilePicture)
           return res.status(200).json({
             message: "Profile image uploaded successfully"
           })
@@ -157,26 +171,13 @@ const fingerprintController = {
         fingerprint: crypto.createHash('sha256').update(req.body.fingerprint || '').digest('hex'),
       });
 
-      if(newStudent && req.file){ 
-        const profilePicture = new profilePicUpload({
-          studentId: newStudent._id,
-          name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
-          data: await fs.readFile(profileImagePath),
-          contentType: req.file.mimetype
-        });
-        await profilePicture.save();
-        res.status(200).json({
-          message: "Profile picture saved successfully",
-          profilePicture
-        })
-        console.log('Profile picture: ',profilePicture)
-        await newStudent.save();
-        
+      await newStudent.save();
+  
+      if (newStudent) {
         const token = generateToken(newStudent._id);
         res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
         console.log('Registration successful', newStudent);
-      }
-  
+      } 
       else {
         res.status(500).json({ error: 'Failed to register user' });
       }
