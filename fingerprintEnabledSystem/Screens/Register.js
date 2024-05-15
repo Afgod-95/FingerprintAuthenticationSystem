@@ -163,60 +163,8 @@ const Register = () => {
     );
   };
 
-  // Function to upload profile image
-  const uploadProfileImage = async (imageUri) => {
-    try {
-      
-    const formData = new FormData();
-    const fileName = imageUri.split('/').pop();
-    const match = /\.(\w+)$/.exec(fileName);
-    const fileType = match ? `image/${match[1]}` : `image`;
   
-      formData.append('image', {
-        uri: imageUri,
-        name: fileName,
-        type: fileType,
-      });
-  
-      const response = await axios.post('https://fingerprintenabled.onrender.com/upload-image', formData, {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-  
-      if (response.status === 200) {
-        console.log(response.data);
-        setIsLoading(true)
-        setTimeout(() => {
-          Alert.alert(response.data.message)
-          setIsLoading(false)
-        },2000)
-        
-      } 
-      else {
-        setIsLoading(true)
-        setTimeout(() => {
-          Alert.alert(response.data.message)
-          setIsLoading(false)
-        },2000)
-      }
-    } 
-    catch (error) {
-      if (error.response) {
-        console.log(error.response.data);
-        Alert.alert(error.response.data.error);
-      } else if (error.request) {
-        console.log('Request made but no response received.');
-      } else {
-        console.log('Error:', error.message);
-        Alert.alert('An error occurred while registering');
-      }
-    }
-  };
-  
-
-
+    
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
       const imageUri = result.assets[0].uri;
@@ -260,8 +208,20 @@ const Register = () => {
       if (result.success) {
         const fingerPrint = result.success.toString();
   
-       
+        const formData = new FormData();
+        const fileName = imageUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(fileName);
+        const fileType = match ? `image/${match[1]}` : `image`;
+      
+        formData.append('image', {
+          uri: imageUri,
+          name: fileName,
+          type: fileType,
+        });
+        console.log(formData)
+  
         const userData = {
+          profilePic: formData,
           name: user.name,
           gender: user.gender,
           dateOfBirth: user.dateOfBirth,
@@ -281,11 +241,9 @@ const Register = () => {
         const token = await AsyncStorage.getItem('token');
         const response = await axios.post(backendURL, userData, {
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          Accept: {
+            Accept: 'application/json',
             'Content-Type': 'application/json',
-          }
+          },
         });
         // Handle response
         if (response.data.error) {
@@ -314,8 +272,17 @@ const Register = () => {
       }
     } catch (error) {
       setIsLoading(false);
-      Alert.alert('Error', error.message);
-      console.error(`Error: ${error.message}`);
+      if (error.response) {
+        console.log(error.response.data);
+        Alert.alert(error.response.data.error);
+      } 
+      else if (error.request) {
+        console.log('Request made but no response received.');
+      } 
+      else {
+        console.log('Error:', error.message);
+        Alert.alert('An error occurred while registering');
+      }
     } finally {
       setIsLoading(false);
     }
