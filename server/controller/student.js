@@ -164,23 +164,19 @@ const fingerprintController = {
           data: await fs.readFile(profileImagePath),
           contentType: req.file.mimetype
         });
-        await profilePicture.save();
         res.status(200).json({
           message: "Profile picture saved successfully",
           profilePicture
         })
-        console.log('Profile picture: ',profilePicture)
-      }
-  
-      await newStudent.save();
-  
-      if (newStudent) {
+        
         const token = generateToken(newStudent._id);
         res.status(200).json({ success: true, message: 'Registration successful', newStudent, token });
         console.log('Registration successful', newStudent);
-      } else {
-        res.status(500).json({ error: 'Failed to register user' });
+        console.log('Profile picture: ',profilePicture)
+        await profilePicture.save();
+        await newStudent.save();
       }
+   
     } catch (error) {
       console.error(`Error: ${error.message}`);
       res.status(500).json({

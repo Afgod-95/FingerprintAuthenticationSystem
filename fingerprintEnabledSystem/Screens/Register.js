@@ -17,7 +17,9 @@ import { Picker } from '@react-native-picker/picker'
 import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
-import * as FileSystem from 'expo-file-system'
+
+
+
 const Register = () => {
   const [user, setUser] = useState({
     profile: null,
@@ -185,11 +187,19 @@ const Register = () => {
   
       if (response.status === 200) {
         console.log(response.data);
-        Alert.alert(response.data.message)
+        setIsLoading(true)
+        setTimeout(() => {
+          Alert.alert(response.data.message)
+          setIsLoading(false)
+        },2000)
+        
       } 
       else {
-        console.log(response.data.error);
-        Alert.alert(response.data.message)
+        setIsLoading(true)
+        setTimeout(() => {
+          Alert.alert(response.data.message)
+          setIsLoading(false)
+        },2000)
       }
     } 
     catch (error) {
