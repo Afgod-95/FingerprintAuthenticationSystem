@@ -22,7 +22,7 @@ import CircularLoader from '../component/CircularLoader';
 
 const Register = () => {
   const [user, setUser] = useState({
-    profile: null,
+    profile: '',
     name: '',
     gender: 'Select gender',
     dateOfBirth: '',
@@ -209,37 +209,32 @@ const Register = () => {
         const fingerPrint = result.success.toString();
   
         const formData = new FormData();
-        const fileName = imageUri.split('/').pop();
+        const fileName = user.profile
         const match = /\.(\w+)$/.exec(fileName);
         const fileType = match ? `image/${match[1]}` : `image`;
       
         formData.append('image', {
-          uri: imageUri,
+          uri: user.profile,
           name: fileName,
           type: fileType,
         });
-        console.log(formData)
-  
-        const userData = {
-          profilePic: formData,
-          name: user.name,
-          gender: user.gender,
-          dateOfBirth: user.dateOfBirth,
-          studentID: user.studentID,
-          email: user.email,
-          password: user.password,
-          phoneNumber: user.phoneNumber,
-          department: user.department,
-          faculty: user.faculty,
-          program: user.program,
-          level: user.level,
-          yearOfEnrollment: user.enrollmentYear,
-          fingerprint: fingerPrint,
-        };
+        formData.append('name', user.name);
+        formData.append('gender', user.gender);
+        formData.append('dateOfBirth', user.dateOfBirth);
+        formData.append('studentID', user.studentID);
+        formData.append('email', user.email);
+        formData.append('password', user.password);
+        formData.append('phoneNumber', user.phoneNumber);
+        formData.append('department', user.department);
+        formData.append('faculty', user.faculty);
+        formData.append('program', user.program);
+        formData.append('level', user.level);
+        formData.append('yearOfEnrollment', user.enrollmentYear);
+        formData.append('fingerprint', fingerPrint);
   
         // Making POST request with authorization header
         const token = await AsyncStorage.getItem('token');
-        const response = await axios.post(backendURL, userData, {
+        const response = await axios.post(backendURL, formData, {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
