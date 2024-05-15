@@ -281,20 +281,25 @@ const Register = () => {
         if (response.data.error) {
           Alert.alert('Error', response.data.error);
           console.log(`Error: ${response.data.error}`);
-        } else if (response.status === 200) {
+        } 
+        
+        else if (response.status === 200) {
           console.log("Navigating to home screen");
           const { token } = response.data;
           console.log(`token: ${token}`);
           if (token) {
             await AsyncStorage.setItem('token', token);
             console.log(response.data.newStudent)
+            Alert.alert(response.data.message)
             navigate.navigate('Login');
-          } else {
+          } 
+          else {
             console.log('Error: Token is undefined or null');
             Alert.alert('Error', 'Token is undefined or null');
           }
         }
-      } else {
+      } 
+      else {
         Alert.alert('Error', 'Fingerprint authentication failed');
       }
     } catch (error) {
@@ -307,8 +312,6 @@ const Register = () => {
   };
   
   
-  
-
   const handleNext = () => {
     if (!isStepValid(currentStep)) {
       // Alert about the specific step's validation error

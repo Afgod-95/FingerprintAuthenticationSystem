@@ -113,7 +113,6 @@ const fingerprintController = {
         program,
         level,
         yearOfEnrollment,
-        profileImagePath
       } = req.body;
   
       // Ensure that password is provided
@@ -166,6 +165,11 @@ const fingerprintController = {
           contentType: req.file.mimetype
         });
         await profilePicture.save();
+        res.status(200).json({
+          message: "Profile picture saved successfully",
+          profilePicture
+        })
+        console.log('Profile picture: ',profilePicture)
       }
   
       await newStudent.save();
