@@ -185,11 +185,21 @@ const Register = () => {
   
       if (response.status === 200) {
         console.log(response.data);
-      } else {
-        console.log(response.data);
+      } 
+      else {
+        console.log(response.data.error);
       }
-    } catch (error) {
-      console.log(error.message);
+    } 
+    catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        Alert.alert(error.response.data.error);
+      } else if (error.request) {
+        console.log('Request made but no response received.');
+      } else {
+        console.log('Error:', error.message);
+        Alert.alert('An error occurred while registering');
+      }
     }
   };
   
@@ -286,7 +296,6 @@ const Register = () => {
         Alert.alert('Error', 'Fingerprint authentication failed');
       }
     } catch (error) {
-      // Handle error
       setIsLoading(false);
       Alert.alert('Error', error.message);
       console.error(`Error: ${error.message}`);

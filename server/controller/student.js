@@ -70,33 +70,15 @@ const fingerprintController = {
 
         try {
           const profileImagePath = req.file.path;
-          const { id } = req.params
           if (!profileImagePath) {
             return res.status(400).json({
               error: "No profile image received"
             });
           }
           console.log('Profile', profileImagePath)
-
-          const student = await studentData.findById(id)
-          if (!student) {
-            return res.status(404).json({
-              error: "Student not found"
-            });
-          }
-          
-          const profilePicture = new profilePicUpload({
-            studentId: student._id,
-            name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
-            data: await fs.readFile(profileImagePath),
-            contentType: req.file.mimetype
-          });
-      
-          await profilePicture.save();
-          res.status(200).json({ 
-            message: 'Profile picture uploaded successfully' 
-          });
-          console.log(profilePicture);
+          return res.status(200).json({
+            message: "Profile image uploaded successfully"
+          })
 
         }
         catch(err) {
@@ -130,7 +112,8 @@ const fingerprintController = {
         faculty,
         program,
         level,
-        yearOfEnrollment
+        yearOfEnrollment,
+        profileImagePath
       } = req.body;
   
       // Ensure that password is provided
@@ -174,6 +157,16 @@ const fingerprintController = {
         fingerPrintData: true,
         fingerprint: crypto.createHash('sha256').update(req.body.fingerprint || '').digest('hex'),
       });
+
+      if(newStudent){ 
+        const profilePicture = new profilePicUpload({
+          studentId: newStudent._id,
+          name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
+          data: await fs.readFile(profileImagePath),
+          contentType: req.file.mimetype
+        });
+        await profilePicture.save();
+      }
   
       await newStudent.save();
   
