@@ -69,7 +69,7 @@ const fingerprintController = {
         }
 
         try {
-          const profileImagePath = req.file.path;
+          const profileImagePath = req.file ? req.file.path : null;
           if (!profileImagePath) {
             return res.status(400).json({
               error: "No profile image received"
@@ -158,7 +158,7 @@ const fingerprintController = {
         fingerprint: crypto.createHash('sha256').update(req.body.fingerprint || '').digest('hex'),
       });
 
-      if(newStudent){ 
+      if(newStudent && req.file){ 
         const profilePicture = new profilePicUpload({
           studentId: newStudent._id,
           name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,

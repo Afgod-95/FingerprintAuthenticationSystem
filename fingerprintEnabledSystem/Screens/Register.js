@@ -185,9 +185,11 @@ const Register = () => {
   
       if (response.status === 200) {
         console.log(response.data);
+        Alert.alert(response.data.message)
       } 
       else {
         console.log(response.data.error);
+        Alert.alert(response.data.message)
       }
     } 
     catch (error) {
