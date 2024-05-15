@@ -5,7 +5,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises; 
 const bcrypt = require('bcrypt');
-const profilePicUpload = require('../model/profilePicUpload.js');
 const { v4: uuidv4 } = require('uuid');
 
 
