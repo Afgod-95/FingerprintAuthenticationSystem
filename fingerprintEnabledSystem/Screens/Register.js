@@ -233,11 +233,10 @@ const Register = () => {
         formData.append('fingerprint', fingerPrint);
   
         // Making POST request with authorization header
-        const token = await AsyncStorage.getItem('token');
         const response = await axios.post(backendURL, formData, {
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
+            'Content-Type': 'multipart/form-data',
           },
         });
         // Handle response
@@ -559,9 +558,9 @@ const Register = () => {
                 </Picker>
               </View>
           
-              <TouchableOpacity onPress={() => setModalVisible(true)}  style={[styles.input, {justifyContent: 'center'}]}>
+              <Pressable onPress={() => setModalVisible(true)}  style={[styles.input, {justifyContent: 'center'}]}>
                 <Text style = {{color: '#acadac', justifyContent: 'center'}}> {user.department}</Text>
-              </TouchableOpacity>
+              </Pressable>
 
               <Modal
                 transparent
@@ -588,17 +587,17 @@ const Register = () => {
                      <ScrollView showsVerticalScrollIndicator={false}>
                       <View style = {{margin: 15}}>
                         {departments.map((department) => (
-                          <TouchableOpacity
-                          key={department}
-                          style = {{marginVertical: 5}}
-                          onPress={() => handleDepartmentSelect(department)}
+                          <Pressable
+                            key={department}
+                            style = {{marginVertical: 5}}
+                            onPress={() => handleDepartmentSelect(department)}
                           >
                             <RadioButton
                               label={department}
                               selected={department === user.department}
                               onPress={() => handleDepartmentSelect(department)}
                             />
-                          </TouchableOpacity> 
+                          </Pressable> 
                         ))}
                       </View>
                       
@@ -807,18 +806,16 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   modalContainer: {
-    flex: 1,
     alignItems: 'center',
     top: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
 
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#1c1c1c',
     marginVertical: 10,
     borderRadius: 10,
     elevation: 5,
-    position: 'absolute',
     width: '100%',
     height: Dimensions.get('window').height/2,
   },
