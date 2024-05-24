@@ -67,8 +67,7 @@ const fingerprintController = {
       }
 
       try {
-        const profileImagePath = req.file
-        if (!profileImagePath) {
+        if (!req.file) {
           return res.status(400).json({
             error: "No profile image received"
           });
@@ -115,7 +114,7 @@ const fingerprintController = {
         const newStudent = new studentData({
           profilePic: {
             name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
-            data: await fs.readFile(profileImagePath),
+            data: await fs.readFile(req.file.path),
             contentType: req.file.mimetype
           },
           name,
