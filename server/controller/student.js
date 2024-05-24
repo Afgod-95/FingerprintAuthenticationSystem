@@ -112,7 +112,7 @@ const fingerprintController = {
         const hashedPassword = await bcrypt.hash(password, 12);
 
         const newStudent = new studentData({
-          profilePic: {
+          image: {
             name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
             data: await fs.readFile(req.file.path),
             contentType: req.file.mimetype
