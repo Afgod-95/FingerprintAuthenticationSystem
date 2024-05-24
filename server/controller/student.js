@@ -67,7 +67,7 @@ const fingerprintController = {
       }
 
       try {
-        const profileImagePath = req.file ? req.file.path : null;
+        const profileImagePath = req.file
         if (!profileImagePath) {
           return res.status(400).json({
             error: "No profile image received"
