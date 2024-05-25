@@ -228,7 +228,6 @@ const imageToBase64 = async (uri) => {
 
         if (result.success) {
             const fingerPrint = result.success.toString();
-            {/*
               const formData = new FormData();
               if (user.profile) {
                 const fileName = user.profile.split('/').pop();
@@ -245,8 +244,8 @@ const imageToBase64 = async (uri) => {
                     // Append the base64 string directly to formData
                     formData.append('image', {
                       name: user.profile,
-                      type: fileType,
-                      uri: buffer,
+                      data: buffer,
+                      contentType: fileType,
                     });
                 } catch (error) {
                     console.error('Error reading file: ', error);
@@ -266,9 +265,9 @@ const imageToBase64 = async (uri) => {
               formData.append('level', user.level);
               formData.append('yearOfEnrollment', user.enrollmentYear);
               formData.append('fingerprint', fingerPrint);
-            */}
+            
 
-            const fileName = user.profile.split('/').pop();
+            {/*const fileName = user.profile.split('/').pop();
             const match = /\.(\w+)$/.exec(fileName);
             const fileType = match ? `image/${match[1]}` : `image`;
             const buffer = Buffer.from(user.profile, 'base64')
@@ -291,13 +290,13 @@ const imageToBase64 = async (uri) => {
               level: user.level,
               yearOfEnrollment: user.enrollmentYear,
               fingerPrint: fingerPrint
-            }
+            }*/}
            
             // Making POST request with authorization header
-            const response = await axios.post(backendURL, requestData, {
+            const response = await axios.post(backendURL, formData, {
                 headers: {
                     Accept: 'application/json',
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                 },
             });
 
