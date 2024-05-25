@@ -67,11 +67,7 @@ const fingerprintController = {
       }
 
       try {
-        if (!req.file) {
-          return res.status(400).json({
-            error: "No profile image received"
-          });
-        }
+        
 
         const {
           name,
@@ -88,6 +84,13 @@ const fingerprintController = {
           yearOfEnrollment,
           fingerprint,
         } = req.body;
+
+        if (!req.file) {
+          console.log("No profile image received")
+          return res.status(400).json({
+            error: "No profile image received"
+          });
+        }
 
         if (!password) {
           return res.status(400).json({

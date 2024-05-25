@@ -17,12 +17,11 @@ import { Picker } from '@react-native-picker/picker'
 import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
-
-
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 const Register = () => {
   const [user, setUser] = useState({
-    profile: '',
+    profile: null,
     name: '',
     gender: 'Select gender',
     dateOfBirth: '',
@@ -138,7 +137,7 @@ const Register = () => {
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
               aspect: [4, 3],
-              quality: 1,
+              quality: 0.5,
             });
   
             console.log(result)
@@ -152,7 +151,7 @@ const Register = () => {
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
               aspect: [4, 3],
-              quality: 1,
+              quality: 0.5,
             });
             
             handleImagePickerResult(result); // Pass the result to handleImagePickerResult
@@ -168,17 +167,25 @@ const Register = () => {
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
       const imageUri = result.assets[0].uri;
-      setUser({ ...user, profile: imageUri });
-      console.log(`Image uri: ${imageUri}`);
-      await uploadProfileImage(imageUri);
+      console.log(`Original Image uri: ${imageUri}`);
+      
+      try {
+        const resizedImage = await manipulateAsync(
+          imageUri, [{ resize: {width: 200, height: 600}}],
+          {compress: 0.8, format: SaveFormat.JPEG}
+        )
+        console.log(`Resized Image uri: ${resizedImage.uri}`);
+        setUser({ ...user, profile: resizedImage.uri });
+      } 
+      catch (error) {
+        console.log('Error resizing image:', error);
+      }
     } 
-    else{
-      return console.log('Failed to setUserProfile')
+    else {
+      console.log('Failed to setUserProfile');
     }
   };
-
-
-
+  
   const submitData = async () => {
     try {
       setIsLoading(true);
@@ -212,12 +219,15 @@ const Register = () => {
         const fileName = user.profile
         const match = /\.(\w+)$/.exec(fileName);
         const fileType = match ? `image/${match[1]}` : `image`;
-      
-        formData.append('image', {
-          uri: user.profile,
-          name: fileName,
-          type: fileType,
-        });
+        
+        if (user.profile === null){
+          formData.append('image', {
+            uri: user.profile,
+            name: fileName,
+            type: fileType,
+          });
+        }
+        
         formData.append('name', user.name);
         formData.append('gender', user.gender);
         formData.append('dateOfBirth', user.dateOfBirth);
@@ -233,11 +243,13 @@ const Register = () => {
         formData.append('fingerprint', fingerPrint);
   
         // Making POST request with authorization header
-        const response = await axios.post(backendURL, formData, {
+        const response = await axios.post(backendURL, {
+          method: 'POST',
           headers: {
             Accept: 'application/json',
             'Content-Type': 'multipart/form-data',
           },
+          body: formData
         });
         // Handle response
         if (response.data.error) {
@@ -677,7 +689,7 @@ const Register = () => {
                 <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
                   style = {{
                     position: 'absolute',
-                    right: 10, top: 25,
+                    right: 18, top: 24,
                     height: 40, 
                     width: 40
                   }}
