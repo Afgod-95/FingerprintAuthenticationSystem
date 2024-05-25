@@ -58,107 +58,114 @@ const upload = multer({
 const fingerprintController = {
   // Register
   register: async (req, res) => {
-    upload(req, res, async (err) => {
-      if (err) {
-        console.log('Error: Failed to upload profile image', err);
-        return res.status(400).json({
-          error: "Failed to upload profile image"
-        });
-      }
-
-      try {
-        
-
-        const {
-          name,
-          gender,
-          dateOfBirth,
-          studentID,
-          email,
-          password,
-          phoneNumber,
-          department,
-          faculty,
-          program,
-          level,
-          yearOfEnrollment,
-          fingerprint,
-        } = req.body;
-
-        if (!req.file) {
-          console.log("No profile image received")
+    try{
+      upload(req, res, async (err) => {
+        try {
+          if (err) {
+            console.log('Error: Failed to upload profile image', err);
+            return res.status(400).json({
+              error: "Failed to upload profile image"
+            });
+          }
+          const {
+            name,
+            gender,
+            dateOfBirth,
+            studentID,
+            email,
+            password,
+            phoneNumber,
+            department,
+            faculty,
+            program,
+            level,
+            yearOfEnrollment,
+            fingerprint,
+          } = req.body;
+  
+          if (!req.file) {
+            console.log("No profile image received")
+            return res.status(400).json({
+              error: "No profile image received"
+            });
+          }
+  
+          if (!password) {
+            return res.status(400).json({
+              error: 'Password is required'
+            });
+          }
+  
+          const existingStudent = await studentData.findOne({ email });
+          if (existingStudent && existingStudent.phoneNumber === phoneNumber) {
+            return res.status(401).json({
+              error: 'Email and phone number already exist',
+            });
+          }
+  
+          const studentIdExist = await studentData.findOne({ studentID });
+          if (studentIdExist) {
+            return res.status(401).json({
+              error: 'Student ID already exists'
+            });
+          }
+  
+          const hashedPassword = await bcrypt.hash(password, 12);
+  
+          const newStudent = new studentData({
+            image: {
+              name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
+              data: await fs.readFile(req.file.path),
+              contentType: req.file.mimetype
+            },
+            name,
+            gender,
+            dateOfBirth,
+            studentID,
+            email,
+            password: hashedPassword,
+            phoneNumber,
+            department,
+            faculty,
+            program,
+            level,
+            yearOfEnrollment,
+            fingerPrintData: true,
+            fingerprint: crypto.createHash('sha256').update(fingerprint || '').digest('hex'),
+          });
+  
+          await newStudent.save();
+  
+          if (newStudent) {
+            const token = generateToken(newStudent._id);
+            res.status(200).json({
+              success: true,
+              message: 'Registration successful',
+              newStudent,
+              token
+            });
+            console.log('Registration successful', newStudent);
+          } else {
+            res.status(500).json({
+              error: 'Failed to register user'
+            });
+          }
+        } catch (error) {
+          console.log(err.message);
           return res.status(400).json({
-            error: "No profile image received"
+            error: error.message
           });
         }
+      });
 
-        if (!password) {
-          return res.status(400).json({
-            error: 'Password is required'
-          });
-        }
-
-        const existingStudent = await studentData.findOne({ email });
-        if (existingStudent && existingStudent.phoneNumber === phoneNumber) {
-          return res.status(401).json({
-            error: 'Email and phone number already exist',
-          });
-        }
-
-        const studentIdExist = await studentData.findOne({ studentID });
-        if (studentIdExist) {
-          return res.status(401).json({
-            error: 'Student ID already exists'
-          });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 12);
-
-        const newStudent = new studentData({
-          image: {
-            name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
-            data: await fs.readFile(req.file.path),
-            contentType: req.file.mimetype
-          },
-          name,
-          gender,
-          dateOfBirth,
-          studentID,
-          email,
-          password: hashedPassword,
-          phoneNumber,
-          department,
-          faculty,
-          program,
-          level,
-          yearOfEnrollment,
-          fingerPrintData: true,
-          fingerprint: crypto.createHash('sha256').update(fingerprint || '').digest('hex'),
-        });
-
-        await newStudent.save();
-
-        if (newStudent) {
-          const token = generateToken(newStudent._id);
-          res.status(200).json({
-            success: true,
-            message: 'Registration successful',
-            newStudent,
-            token
-          });
-          console.log('Registration successful', newStudent);
-        } else {
-          res.status(500).json({
-            error: 'Failed to register user'
-          });
-        }
-      } catch (err) {
-        console.log(err.message);
-        return res.status(400).json({
-          error: err.message
-        });
-      }
-    });
+    }
+    catch(error){
+      console.log(err.message);
+      return res.status(400).json({
+        error: error.message
+      });
+    }
+    
   },
 
   // Login endpoint for student
