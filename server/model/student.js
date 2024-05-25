@@ -77,5 +77,14 @@ const studentSchema = new mongoose.Schema({
     },
 })
 
+studentSchema.pre('save', async function (next) {
+    if (!this.isModified('image.name')) {
+        return next();
+    }
+    const uniqueId = Date.now().toString(); // Unique identifier (you can use UUID or any other method)
+    this.image.name = `${this.image.name}-${uniqueId}`;
+    next();
+});
+
 const studentData = mongoose.model('studentData', studentSchema)
 module.exports = studentData

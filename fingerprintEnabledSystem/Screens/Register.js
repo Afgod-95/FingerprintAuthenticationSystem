@@ -18,10 +18,13 @@ import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
+import { Buffer } from 'buffer';
+
 
 const Register = () => {
   const [user, setUser] = useState({
-    profile: null,
+    profile: 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg',
     name: '',
     gender: 'Select gender',
     dateOfBirth: '',
@@ -162,24 +165,35 @@ const Register = () => {
     );
   };
 
+  // Function to convert image URI to base64
+const imageToBase64 = async (uri) => {
+  try {
+    let base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return base64;
+  } catch (error) {
+    console.error('Error converting image to base64:', error);
+    return null;
+  }
+};
+
   
     
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
       const imageUri = result.assets[0].uri;
       console.log(`Original Image uri: ${imageUri}`);
+      // Convert the image uri into base64 encoded string
+      {/*const base64Image = await fetch(imageUri).then((res) => res.blob()).then((blob) => blob.arrayBuffer()).then((
+        buffer) => new Uint8Array(buffer)).then((bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))));
+        console.log(`Base64 encoded image: ${base64Image}`);
+        // Set the image source to the base64 encoded string
+        setUser({ ...user, profile: base64Image });
+      */}
       
-      try {
-        const resizedImage = await manipulateAsync(
-          imageUri, [{ resize: {width: 200, height: 600}}],
-          {compress: 0.8, format: SaveFormat.JPEG}
-        )
-        console.log(`Resized Image uri: ${resizedImage.uri}`);
-        setUser({ ...user, profile: resizedImage.uri });
-      } 
-      catch (error) {
-        console.log('Error resizing image:', error);
-      }
+     // Set the image source to the original image uri
+     setUser({ ...user, profile: imageUri });
     } 
     else {
       console.log('Failed to setUserProfile');
@@ -188,111 +202,148 @@ const Register = () => {
   
   const submitData = async () => {
     try {
-      setIsLoading(true);
-  
-      // Check if fingerprint authentication is supported and enrolled
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      if (!hasHardware) {
-        Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-        setIsLoading(false);
-        return;
-      }
-  
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      if (!isEnrolled) {
-        Alert.alert('Error', 'No fingerprint enrolled on this device.');
-        setIsLoading(false);
-        return;
-      }
-  
-      // Authenticate user with fingerprint
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate with your fingerprint',
-      });
-  
-      console.log('Fingerprint result:', JSON.stringify(result));
-  
-      if (result.success) {
-        const fingerPrint = result.success.toString();
-  
-        const formData = new FormData();
-        const fileName = user.profile
-        const match = /\.(\w+)$/.exec(fileName);
-        const fileType = match ? `image/${match[1]}` : `image`;
-        
-        if (user.profile === null){
-          formData.append('image', {
-            uri: user.profile,
-            name: fileName,
-            type: fileType,
-          });
+        setIsLoading(true);
+
+        // Check if fingerprint authentication is supported and enrolled
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        if (!hasHardware) {
+            Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
+            setIsLoading(false);
+            return;
         }
-        
-        formData.append('name', user.name);
-        formData.append('gender', user.gender);
-        formData.append('dateOfBirth', user.dateOfBirth);
-        formData.append('studentID', user.studentID);
-        formData.append('email', user.email);
-        formData.append('password', user.password);
-        formData.append('phoneNumber', user.phoneNumber);
-        formData.append('department', user.department);
-        formData.append('faculty', user.faculty);
-        formData.append('program', user.program);
-        formData.append('level', user.level);
-        formData.append('yearOfEnrollment', user.enrollmentYear);
-        formData.append('fingerprint', fingerPrint);
-  
-        // Making POST request with authorization header
-        const response = await axios.post(backendURL, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'multipart/form-data',
-          },
-          body: formData
+
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        if (!isEnrolled) {
+            Alert.alert('Error', 'No fingerprint enrolled on this device.');
+            setIsLoading(false);
+            return;
+        }
+
+        // Authenticate user with fingerprint
+        const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Authenticate with your fingerprint',
         });
-        // Handle response
-        if (response.data.error) {
-          Alert.alert('Error', response.data.error);
-          console.log(`Error: ${response.data.error}`);
-        } 
-        
-        else if (response.status === 200) {
-          console.log("Navigating to home screen");
-          const { token } = response.data;
-          console.log(`token: ${token}`);
-          if (token) {
-            await AsyncStorage.setItem('token', token);
-            console.log(response.data.newStudent)
-            Alert.alert(response.data.message)
-            navigate.navigate('Login');
-          } 
-          else {
-            console.log('Error: Token is undefined or null');
-            Alert.alert('Error', 'Token is undefined or null');
-          }
+
+        console.log('Fingerprint result:', JSON.stringify(result));
+
+        if (result.success) {
+            const fingerPrint = result.success.toString();
+            {/*
+              const formData = new FormData();
+              if (user.profile) {
+                const fileName = user.profile.split('/').pop();
+                const match = /\.(\w+)$/.exec(fileName);
+                const fileType = match ? `image/${match[1]}` : `image`;
+                console.log('This is the profile to be submitted',user.profile)
+                try {
+                    // Read the file as a base64 string
+                    const fileData = await FileSystem.readAsStringAsync(user.profile, {
+                      encoding: FileSystem.EncodingType.Base64,
+                    });
+                    
+                    const buffer = Buffer.from(fileData,'base64')
+                    // Append the base64 string directly to formData
+                    formData.append('image', {
+                      name: user.profile,
+                      type: fileType,
+                      uri: buffer,
+                    });
+                } catch (error) {
+                    console.error('Error reading file: ', error);
+                }
+              }
+            
+              formData.append('name', user.name);
+              formData.append('gender', user.gender);
+              formData.append('dateOfBirth', user.dateOfBirth);
+              formData.append('studentID', user.studentID);
+              formData.append('email', user.email);
+              formData.append('password', user.password);
+              formData.append('phoneNumber', user.phoneNumber);
+              formData.append('department', user.department);
+              formData.append('faculty', user.faculty);
+              formData.append('program', user.program);
+              formData.append('level', user.level);
+              formData.append('yearOfEnrollment', user.enrollmentYear);
+              formData.append('fingerprint', fingerPrint);
+            */}
+
+            const fileName = user.profile.split('/').pop();
+            const match = /\.(\w+)$/.exec(fileName);
+            const fileType = match ? `image/${match[1]}` : `image`;
+            const buffer = Buffer.from(user.profile, 'base64')
+            const requestData = {
+              image: {
+                name: user.profile,
+                data: buffer,
+                contentType: fileType,
+              },
+              name: user.name,
+              gender: user.gender,
+              dateOfBirth: user.dateOfBirth,
+              studentID: user.studentID,
+              email: user.email,
+              password: user.password,
+              phoneNumber: user.phoneNumber,
+              department: user.department,
+              faculty: user.faculty,
+              program: user.program,
+              level: user.level,
+              yearOfEnrollment: user.enrollmentYear,
+              fingerPrint: fingerPrint
+            }
+           
+            // Making POST request with authorization header
+            const response = await axios.post(backendURL, requestData, {
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Handle response
+            if (response.data.error) {
+                Alert.alert('Error', response.data.error);
+                console.log(`Error: ${response.data.error}`);
+            } else if (response.status === 200) {
+                console.log("Navigating to home screen");
+                const { token } = response.data;
+                console.log(`token: ${token}`);
+                if (token) {
+                    await AsyncStorage.setItem('token', token);
+                    console.log(response.data.newStudent);
+                    Alert.alert(response.data.message);
+                    navigate.navigate('Login');
+                } else {
+                    console.log('Error: Token is undefined or null');
+                    Alert.alert('Error', 'Token is undefined or null');
+                }
+            }
+        } else {
+            Alert.alert('Error', 'Fingerprint authentication failed');
         }
-      } 
-      else {
-        Alert.alert('Error', 'Fingerprint authentication failed');
-      }
-    } catch (error) {
+    } 
+    catch (error) {
       setIsLoading(false);
       if (error.response) {
-        console.log(error.response.data);
-        Alert.alert(error.response.data.error);
-      } 
-      else if (error.request) {
-        console.log('Request made but no response received.');
-      } 
-      else {
-        console.log('Error:', error.message);
-        Alert.alert('An error occurred while registering');
+          if (error.response.data && error.response.data.code === 11000) {
+              Alert.alert('Error', 'A user with this profile picture already exists.');
+          } else {
+              Alert.alert('Error', error.response.data.error);
+          }
+          console.log(error.response.data);
+      } else if (error.request) {
+          console.log('Request made but no response received.');
+      } else {
+          console.log('Error:', error.message);
+          Alert.alert('An error occurred while registering');
       }
-    } finally {
+    }
+    finally {
       setIsLoading(false);
     }
   };
+
   
   
   const handleNext = () => {
@@ -302,6 +353,10 @@ const Register = () => {
     }
   
     if (currentStep < totalSteps) {
+      if (currentStep === 1 && user.profile === 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg') {
+        Alert.alert('Error', 'Profile picture is required.');
+        return;
+      }
       setCurrentStep(currentStep + 1);
       
     } else {
@@ -317,7 +372,7 @@ const Register = () => {
     switch (step) {
       
       case 1:
-        if (!user.profile){
+        if (user.profile === 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg'){
           Alert.alert('Error', 'Profile picture is required.');
           return false
         }
@@ -453,7 +508,7 @@ const Register = () => {
               end={{ x: 0.8, y: 1 }}
               style={styles.gradientBorder}
             >
-              <Image source={{ uri: user.profile || 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg' }} style={styles.image} />
+              <Image source={{ uri: user.profile }} style={styles.image} />
               <Pressable
                 onPress={pickImage}
                 style={{
