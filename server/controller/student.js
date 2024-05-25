@@ -151,7 +151,7 @@ const fingerprintController = {
             });
           }
         } catch (error) {
-          console.log(err.message);
+          console.log(error.message);
           return res.status(400).json({
             error: error.message
           });
@@ -160,7 +160,7 @@ const fingerprintController = {
 
     }
     catch(error){
-      console.log(err.message);
+      console.log(error.message);
       return res.status(400).json({
         error: error.message
       });
