@@ -17,9 +17,10 @@ import { Picker } from '@react-native-picker/picker'
 import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import * as FileSystem from 'expo-file-system';
-import { Buffer } from 'buffer';
+import { manipulateAsync, SaveFormat, readAsStringAsync } from 'expo-image-manipulator';
+import { Buffer } from 'buffer'
+import * as FileSystem from 'expo-file-system'
+import { v4 as uuidv4 } from 'uuid';
 
 
 const Register = () => {
@@ -165,40 +166,24 @@ const Register = () => {
     );
   };
 
-  // Function to convert image URI to base64
-const imageToBase64 = async (uri) => {
-  try {
-    let base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    return base64;
-  } catch (error) {
-    console.error('Error converting image to base64:', error);
-    return null;
-  }
-};
-
   
     
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
       const imageUri = result.assets[0].uri;
       console.log(`Original Image uri: ${imageUri}`);
-      // Convert the image uri into base64 encoded string
-      {/*const base64Image = await fetch(imageUri).then((res) => res.blob()).then((blob) => blob.arrayBuffer()).then((
-        buffer) => new Uint8Array(buffer)).then((bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))));
-        console.log(`Base64 encoded image: ${base64Image}`);
-        // Set the image source to the base64 encoded string
-        setUser({ ...user, profile: base64Image });
-      */}
-      
-     // Set the image source to the original image uri
-     setUser({ ...user, profile: imageUri });
-    } 
-    else {
+      const fileInfo = await FileSystem.getInfoAsync(imageUri);
+      if (fileInfo.exists && fileInfo.isDirectory === false) {
+        setUser({ ...user, profile: imageUri });
+      } else {
+        console.log('Selected image is not a file');
+        Alert.alert('Error', 'Please select a valid image file');
+      }
+    } else {
       console.log('Failed to setUserProfile');
     }
   };
+
   
   const submitData = async () => {
     try {
@@ -227,71 +212,40 @@ const imageToBase64 = async (uri) => {
         console.log('Fingerprint result:', JSON.stringify(result));
 
         if (result.success) {
-            const fingerPrint = result.success.toString();
-              const formData = new FormData();
-              if (user.profile) {
-                const fileName = user.profile.split('/').pop();
-                const match = /\.(\w+)$/.exec(fileName);
-                const fileType = match ? `image/${match[1]}` : `image`;
-                console.log('This is the profile to be submitted',user.profile)
-                try {
-                    // Read the file as a base64 string
-                    const fileData = await FileSystem.readAsStringAsync(user.profile, {
-                      encoding: FileSystem.EncodingType.Base64,
-                    });
-                    
-                    const buffer = Buffer.from(fileData,'base64')
-                    // Append the base64 string directly to formData
-                    formData.append('image', {
-                      name: user.profile,
-                      data: buffer,
-                      contentType: fileType,
-                    });
-                } catch (error) {
-                    console.error('Error reading file: ', error);
-                }
-              }
-            
-              formData.append('name', user.name);
-              formData.append('gender', user.gender);
-              formData.append('dateOfBirth', user.dateOfBirth);
-              formData.append('studentID', user.studentID);
-              formData.append('email', user.email);
-              formData.append('password', user.password);
-              formData.append('phoneNumber', user.phoneNumber);
-              formData.append('department', user.department);
-              formData.append('faculty', user.faculty);
-              formData.append('program', user.program);
-              formData.append('level', user.level);
-              formData.append('yearOfEnrollment', user.enrollmentYear);
-              formData.append('fingerprint', fingerPrint);
-            
+            // Read the image file directly as a buffer
+            const bufferData = await FileSystem.readAsStringAsync(user.profile, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
 
-            {/*const fileName = user.profile.split('/').pop();
-            const match = /\.(\w+)$/.exec(fileName);
-            const fileType = match ? `image/${match[1]}` : `image`;
-            const buffer = Buffer.from(user.profile, 'base64')
-            const requestData = {
-              image: {
-                name: user.profile,
-                data: buffer,
-                contentType: fileType,
-              },
-              name: user.name,
-              gender: user.gender,
-              dateOfBirth: user.dateOfBirth,
-              studentID: user.studentID,
-              email: user.email,
-              password: user.password,
-              phoneNumber: user.phoneNumber,
-              department: user.department,
-              faculty: user.faculty,
-              program: user.program,
-              level: user.level,
-              yearOfEnrollment: user.enrollmentYear,
-              fingerPrint: fingerPrint
-            }*/}
-           
+            console.log('Buffered data', bufferData);
+
+            const fingerPrint = result.success.toString();
+            const formData = new FormData();
+            const fileName = user.profile.split('/')[1];
+            const fileType = fileName.split('.').pop();
+            formData.append('image', {
+              name: `${fileName}.jpg`,
+              data: Buffer.from(bufferData, 'base64'), // Set buffer data here
+              contentType: `image/${fileType}`,
+            });
+
+            // Append other user data to the formData
+            formData.append('name', user.name);
+            formData.append('gender', user.gender);
+            formData.append('dateOfBirth', user.dateOfBirth);
+            formData.append('studentID', user.studentID);
+            formData.append('email', user.email);
+            formData.append('password', user.password);
+            formData.append('phoneNumber', user.phoneNumber);
+            formData.append('department', user.department);
+            formData.append('faculty', user.faculty);
+            formData.append('program', user.program);
+            formData.append('level', user.level);
+            formData.append('yearOfEnrollment', user.enrollmentYear);
+            formData.append('fingerprint', fingerPrint);
+
+            console.log('Form Data', formData)
+
             // Making POST request with authorization header
             const response = await axios.post(backendURL, formData, {
                 headers: {
@@ -300,7 +254,7 @@ const imageToBase64 = async (uri) => {
                 },
             });
 
-            // Handle response
+            // Handling response
             if (response.data.error) {
                 Alert.alert('Error', response.data.error);
                 console.log(`Error: ${response.data.error}`);
@@ -321,25 +275,19 @@ const imageToBase64 = async (uri) => {
         } else {
             Alert.alert('Error', 'Fingerprint authentication failed');
         }
-    } 
-    catch (error) {
-      setIsLoading(false);
-      if (error.response) {
-          if (error.response.data && error.response.data.code === 11000) {
-              Alert.alert('Error', 'A user with this profile picture already exists.');
-          } else {
-              Alert.alert('Error', error.response.data.error);
-          }
-          console.log(error.response.data);
-      } else if (error.request) {
-          console.log('Request made but no response received.');
-      } else {
-          console.log('Error:', error.message);
-          Alert.alert('An error occurred while registering');
-      }
-    }
-    finally {
-      setIsLoading(false);
+    } catch (error) {
+        setIsLoading(false);
+        if (error.response) {
+            console.log(error.response.data);
+            Alert.alert(error.response.data.error);
+        } else if (error.request) {
+            console.log('Request made but no response received.');
+        } else {
+            console.log('Error:', error.message);
+            Alert.alert('An error occurred while registering');
+        }
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -352,10 +300,6 @@ const imageToBase64 = async (uri) => {
     }
   
     if (currentStep < totalSteps) {
-      if (currentStep === 1 && user.profile === 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg') {
-        Alert.alert('Error', 'Profile picture is required.');
-        return;
-      }
       setCurrentStep(currentStep + 1);
       
     } else {
@@ -507,7 +451,7 @@ const imageToBase64 = async (uri) => {
               end={{ x: 0.8, y: 1 }}
               style={styles.gradientBorder}
             >
-              <Image source={{ uri: user.profile }} style={styles.image} />
+              <Image source={{ uri: user.profile}} style={styles.image} />
               <Pressable
                 onPress={pickImage}
                 style={{

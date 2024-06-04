@@ -12,7 +12,7 @@ export default function App() {
   const Stack = createStackNavigator()
   return (
     <>
-    
+      <GestureHandlerRootView>
         <NavigationContainer>
             <StatusBar translucent backgroundColor="transparent" />
             <Stack.Navigator initialRouteName='Login'
@@ -26,6 +26,7 @@ export default function App() {
               <Stack.Screen name='Home' component={Home} options={{headerShown: false}}/>
             </Stack.Navigator>            
         </NavigationContainer>
+       </GestureHandlerRootView> 
     </>
   );
 
