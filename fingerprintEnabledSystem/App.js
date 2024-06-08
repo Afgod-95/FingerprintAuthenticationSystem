@@ -1,6 +1,7 @@
 
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-gesture-handler'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import Login from './Screens/Login'
@@ -18,7 +19,6 @@ export default function App() {
             <Stack.Navigator initialRouteName='Login'
               screenOptions={{
                 headerShown: false,
-                cardStyle: {backgroundColor: '#000'}
               }}
             >
               <Stack.Screen name='Login' component={Login} options={{headerShown: false}}/>

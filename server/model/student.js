@@ -63,6 +63,10 @@ const studentSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    yearOfCompletion: {
+        type: Date,
+        required: true
+    },
     fingerPrintData: {
         type: Boolean,
         default: false

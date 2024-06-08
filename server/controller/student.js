@@ -80,6 +80,7 @@ const fingerprintController = {
             program,
             level,
             yearOfEnrollment,
+            yearOfCompletion,
             fingerprint,
           } = req.body;
   
@@ -130,6 +131,7 @@ const fingerprintController = {
             program,
             level,
             yearOfEnrollment,
+            yearOfCompletion,
             fingerPrintData: true,
             fingerprint: crypto.createHash('sha256').update(fingerprint || '').digest('hex'),
           });
@@ -196,7 +198,7 @@ const fingerprintController = {
       const token = generateToken(student._id);
       res.status(200).json({
         success: true,
-        message: "Login successful",
+        message: "Access Granted",
         token
       });
     } catch (error) {

@@ -5,6 +5,7 @@ import { View, Text, KeyboardAvoidingView,
    Platform, Alert, Animated, Modal, Dimensions, ScrollView,
    Pressable
 } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -17,10 +18,12 @@ import { Picker } from '@react-native-picker/picker'
 import { departments, faculties, genders, levels, } from '../UserData';
 import RadioButton from '../component/RadioButton';
 import CircularLoader from '../component/CircularLoader';
-import { manipulateAsync, SaveFormat, readAsStringAsync } from 'expo-image-manipulator';
-import { Buffer } from 'buffer'
+
 import * as FileSystem from 'expo-file-system'
-import { v4 as uuidv4 } from 'uuid';
+import { ErrorMessages, SuccessMessages } from '../component/Messages';
+import PasswordStrength from '../component/PasswordStrength';
+
+
 
 
 const Register = () => {
@@ -38,9 +41,19 @@ const Register = () => {
     program: '',
     level: 'Select Level',
     enrollmentYear: '',
+    yearOfCompletion:''
   });
 
+  const [isPasswordFieldFocused, setIsPasswordFieldFocused] = useState(false)
+
+  const [errorMessage, setErrorMessage] = useState(null)
+  const [successMessage, setSuccessMessage] = useState(null)
+  const [errorVisible, setErrorVisible] = useState(false)
+  const [successVisible, setSuccessVisible] = useState(false)
+  const [passwordStrengthVisible, setPasswordStrengthVisible] = useState(false)
   const [currentDate, setCurrentDate] = useState(new Date())
+
+  const [passwordScore, setPasswordScore] = useState(0)
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -102,9 +115,27 @@ const Register = () => {
   const handleEnrollmentConfirm = (selectedDate) => {
     const dateObject = new Date(selectedDate);
     const date = dateObject.toLocaleDateString();
-    console.log(`Enrollment Year selected: ${date}`);
     setUser({ ...user, enrollmentYear: date.toString() });
     hideEnrollmentDatePicker();
+  };
+
+  const [isYearOfCompletionDatePickerVisible, setIsYearOfCompletionDatePickerVisible] = useState(false);
+  // Function to show the year of completion date picker
+  const showYearOfCompletionDatePicker = () => {
+    setIsYearOfCompletionDatePickerVisible(true);
+  };
+
+  // Function to hide the year of completion date picker
+  const hideYearOfCompletionPicker = () => {
+    setIsYearOfCompletionDatePickerVisible(false);
+  };
+
+  // Function to handle the selection of year of completion
+  const handleYearOfCompletionDateConfirm = (selectedDate) => {
+    const dateObject = new Date(selectedDate);
+    const date = dateObject.toLocaleDateString();
+    setUser({ ...user, yearOfCompletion: date.toString() });
+    hideYearOfCompletionPicker();
   };
 
   const showDatePicker = () => {
@@ -115,17 +146,16 @@ const Register = () => {
     setIsDatePickerVisible(false)
   }
   
+  
   const handleConfirm = (selectedDate) => {
     
-    const dateObject = new Date(selectedDate); // Convert selectedDate to a Date object
-    const formattedDate = dateObject.toLocaleDateString(); // Extract date part only
-    console.log(`A date has been picked: ${formattedDate}`);
+    const dateObject = new Date(selectedDate); 
+    const formattedDate = dateObject.toLocaleDateString(); 
     setUser({ ...user, dateOfBirth: formattedDate });
     hideDatePicker();
   };
 
   const pickImage = async () => {
-    // Show options for selecting image from camera or file system
     Alert.alert(
       'Select Image Source',
       'Choose the source of the image',
@@ -155,10 +185,10 @@ const Register = () => {
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
               aspect: [4, 3],
-              quality: 0.5,
+              quality: 1,
             });
             
-            handleImagePickerResult(result); // Pass the result to handleImagePickerResult
+            handleImagePickerResult(result);
           },
         },
       ],
@@ -167,7 +197,6 @@ const Register = () => {
   };
 
   
-    
   const handleImagePickerResult = async (result) => {
     if (!result.cancelled) {
       const imageUri = result.assets[0].uri;
@@ -177,7 +206,8 @@ const Register = () => {
         setUser({ ...user, profile: imageUri });
       } else {
         console.log('Selected image is not a file');
-        Alert.alert('Error', 'Please select a valid image file');
+        setErrorMessage('Please select a valid image file');
+        setErrorVisible(true)
       }
     } else {
       console.log('Failed to setUserProfile');
@@ -192,16 +222,18 @@ const Register = () => {
         // Check if fingerprint authentication is supported and enrolled
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
         if (!hasHardware) {
-            Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-            setIsLoading(false);
-            return;
+          setErrorMessage('Fingerprint authentication is not supported on this device');
+          setErrorVisible(true)
+          setIsLoading(false);
+          return;
         }
 
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
         if (!isEnrolled) {
-            Alert.alert('Error', 'No fingerprint enrolled on this device.');
-            setIsLoading(false);
-            return;
+          setErrorMessage('No fingerprint enrolled on this device.');
+          setErrorVisible(true)
+          setIsLoading(false);
+          return;
         }
 
         // Authenticate user with fingerprint
@@ -209,27 +241,16 @@ const Register = () => {
             promptMessage: 'Authenticate with your fingerprint',
         });
 
-        console.log('Fingerprint result:', JSON.stringify(result));
 
         if (result.success) {
-            // Read the image file directly as a buffer
-            const bufferData = await FileSystem.readAsStringAsync(user.profile, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-
-            console.log('Buffered data', bufferData);
-
             const fingerPrint = result.success.toString();
             const formData = new FormData();
-            const fileName = user.profile.split('/')[1];
-            const fileType = fileName.split('.').pop();
-            formData.append('image', {
-              name: `${fileName}.jpg`,
-              data: Buffer.from(bufferData, 'base64'), // Set buffer data here
-              contentType: `image/${fileType}`,
-            });
+            const localUri = user.profile;
+            const filename = localUri.split('/').pop();
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : 'image';
+            formData.append('image', { uri: localUri, name: filename, type });
 
-            // Append other user data to the formData
             formData.append('name', user.name);
             formData.append('gender', user.gender);
             formData.append('dateOfBirth', user.dateOfBirth);
@@ -242,6 +263,7 @@ const Register = () => {
             formData.append('program', user.program);
             formData.append('level', user.level);
             formData.append('yearOfEnrollment', user.enrollmentYear);
+            formData.append('yearOfCompletion', user.yearOfCompletion);
             formData.append('fingerprint', fingerPrint);
 
             console.log('Form Data', formData)
@@ -256,46 +278,55 @@ const Register = () => {
 
             // Handling response
             if (response.data.error) {
-                Alert.alert('Error', response.data.error);
-                console.log(`Error: ${response.data.error}`);
-            } else if (response.status === 200) {
-                console.log("Navigating to home screen");
-                const { token } = response.data;
-                console.log(`token: ${token}`);
-                if (token) {
-                    await AsyncStorage.setItem('token', token);
-                    console.log(response.data.newStudent);
-                    Alert.alert(response.data.message);
-                    navigate.navigate('Login');
-                } else {
-                    console.log('Error: Token is undefined or null');
-                    Alert.alert('Error', 'Token is undefined or null');
-                }
+              setErrorMessage(response.data.error)
+              setErrorVisible(true)
+            } 
+            else {
+              
+              await AsyncStorage.setItem('token', token);
+              setSuccessMessage(response.data.message)
+              setSuccessVisible(true)
             }
         } else {
-            Alert.alert('Error', 'Fingerprint authentication failed');
+           setErrorMessage('Fingerprint authentication failed');
+           setErrorVisible(true)
         }
     } catch (error) {
         setIsLoading(false);
         if (error.response) {
-            console.log(error.response.data);
-            Alert.alert(error.response.data.error);
+            setErrorMessage(error.response.data.error);
+            setErrorVisible(true)
         } else if (error.request) {
-            console.log('Request made but no response received.');
-        } else {
-            console.log('Error:', error.message);
-            Alert.alert('An error occurred while registering');
+          console.log('Request made but no response received.');
+        } 
+        else {
+          console.log('Error:', error.message);
+          setErrorMessage('An error occurred while registering');
+          setErrorVisible(true)
         }
     } finally {
         setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (successVisible) {
+      setTimeout(() => {
+        setSuccessVisible(false);
+        navigate.navigate('Login');
+      }, 3000); 
+    }
+  }, [successVisible])
   
-  
+  const handleIsFocused = () => {
+    setIsPasswordFieldFocused(true)
+  }
+
+  const handleOnBlur = () => {
+    setIsPasswordFieldFocused(false)
+  }
   const handleNext = () => {
     if (!isStepValid(currentStep)) {
-      // Alert about the specific step's validation error
       return;
     }
   
@@ -303,8 +334,8 @@ const Register = () => {
       setCurrentStep(currentStep + 1);
       
     } else {
-      // Check if all steps are completed before triggering fingerprint authentication
-      submitData(); // Trigger data submission when all steps are completed
+     
+      submitData(); 
     }
   };
   
@@ -316,74 +347,86 @@ const Register = () => {
       
       case 1:
         if (user.profile === 'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg'){
-          Alert.alert('Error', 'Profile picture is required.');
+          setErrorMessage('Profile picture is required.');
+          setErrorVisible(true)
           return false
         }
         return true
       case 2:
         if (!user.name || !user.gender || !user.dateOfBirth || !user.studentID) {
-          console.log(user.name, `Gender: ${user.gender}`, user.dateOfBirth, user.studentID);
-          Alert.alert('Error', 'Please fill in all required fields.');
+          setErrorMessage('Please fill in all required fields.');
+          setErrorVisible(true)
           return false;
         }
 
         if (user.gender === 'Select gender'){
-          Alert.alert('Error', 'Please select gender')
+          setErrorMessage('Please select gender')
+          setErrorVisible(true)
           return false
         }
 
         if(user.studentID.length !== 9 || !user.studentID.endsWith('D')){
-          Alert.alert('Error','Invalid student ID')
+          setErrorMessage('Invalid student ID')
+          setErrorVisible(true)
           return false
         }
         return true;
 
       case 3:
         if (!user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
-          console.log(user.department, user.faculty, user.program, user.level);
-          Alert.alert('Error', 'Please fill in all required fields.');
+          setErrorMessage('Please fill in all required fields.');
+          setErrorVisible(true)
           return false;
         }
 
         if (user.level === 'Select level'){
-          Alert.alert('Error', 'Please select your level')
+          setErrorMessage('Please select your level')
+          setErrorVisible(true)
           return false
         }
 
         if (user.faculty === 'Please select your faculty'){
-          Alert.alert('Error', 'Please select your faculty')
+          setErrorMessage('Please select your faculty')
+          setErrorVisible(true)
           return false
         }
 
         if (user.department === 'Please select your department'){
-          Alert.alert('Error', 'Please select your department')
+          setErrorMessage('Please select your department')
+          setErrorVisible(true)
           return false
         }
 
         return true;
         
       case 4:
+        const passwordRegex  = /^[a-zA-Z0-9!@#$%^&*]{6,16}$/;
+        const phoneRegex = /^[0-9]{10}$/;
+
         if (!user.email || !user.phoneNumber || !user.password) {
-          Alert.alert('Error', 'Please fill in all required fields.');
+          setErrorMessage('Please all fields are required')
+          setErrorVisible(true)
           return false;
         }
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const isValidEmail = emailRegex.test(user.email);
         if (!isValidEmail) {
-          Alert.alert('Error', 'Invalid email format');
+          setErrorMessage('Invalid email format')
+          setErrorVisible(true)
           return false;
         }
         // Phone number validation (assuming 10-digit numbers)
-        const phoneRegex = /^[0-9]{10}$/;
         const isValidPhone = phoneRegex.test(user.phoneNumber);
         if (!isValidPhone) {
-          Alert.alert('Error', 'Invalid phone number format (10 digits expected)');
+          setErrorMessage('Invalid phone number format (10 digits expected)');
+          setErrorVisible(true)
           return false;
         }
 
-        if (user.password.length < 5) {
-          Alert.alert('Error', 'Password must be at least 6 characters long)');
+        if (user.password.length < 5 && passwordRegex.test(user.password)) {
+          setErrorMessage('Password must be at least 6 characters long');
+          setErrorVisible(true)
           return false;
         }
 
@@ -393,6 +436,12 @@ const Register = () => {
         return true;
     }
   };
+
+  const programSelect = () => {
+    switch(departments){
+      case '': 
+    }
+  }
   
   //rendering indicator / steps 
   const renderIndicator = () => {
@@ -404,7 +453,8 @@ const Register = () => {
               key={step}
               onPress={() => {
                 if (!isStepValid(step)) {
-                  Alert.alert('Error', 'Please fill in all required fields before proceeding.');
+                  setErrorMessage('Error', 'Please fill in all required fields before proceeding.');
+                  setErrorVisible(true)
                   return;
                 }
                 setCurrentStep(step);
@@ -659,6 +709,27 @@ const Register = () => {
                 </Pressable>
               )}
 
+              {Platform.OS === 'ios' ? (
+                <Pressable onPress={showYearOfCompletionDatePicker} style={[styles.input, { justifyContent: 'center' }]}>
+                  <Text style={{ color: '#acadac' }}>{user.yearOfCompletion ? user.yearOfCompletion : 'Date of completion'}</Text>
+                </Pressable>
+              ) : (
+                <Pressable onPress={showYearOfCompletionDatePicker} style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <View  style={[styles.input, { justifyContent: 'center' }]}>
+                  <Text style={{ color: '#acadac' }}>{user.yearOfCompletion ? user.yearOfCompletion : 'Date of completion'}</Text>
+                  </View>
+                  {isYearOfCompletionDatePickerVisible && (
+                    <DateTimePickerModal
+                      isVisible={isYearOfCompletionDatePickerVisible}
+                      mode="date"
+                      maximumDate={currentDate}
+                      onConfirm={handleYearOfCompletionDateConfirm}
+                      onCancel={hideYearOfCompletionPicker}
+                    />
+                  )}
+                </Pressable>
+              )}
+
             </View>
           </>
         );
@@ -682,6 +753,8 @@ const Register = () => {
                   secureTextEntry={!isVisible}
                   placeholderTextColor="#acadac"
                   value={user.password}
+                  onBlur={handleOnBlur}
+                  onFocus={handleIsFocused}
                   onChangeText={(text) => setUser({ ...user, password: text })}
                 />
                 <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
@@ -694,6 +767,9 @@ const Register = () => {
                 >
                   <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
                 </TouchableOpacity>
+                
+                {isPasswordFieldFocused &&  <PasswordStrength  password={user.password}/>}
+                
               </View>
               
               <TextInput
@@ -738,7 +814,24 @@ const Register = () => {
             </TouchableOpacity>
           </View>
         </ScrollView>
+        
       </KeyboardAvoidingView>
+      {errorMessage && (
+          <ErrorMessages 
+            errorMessage={errorMessage}
+            visible={errorVisible}
+            onClose={() => setErrorVisible(false)}
+          />
+        )}
+
+        {successMessage && (
+          <SuccessMessages 
+            successMessage={successMessage} 
+            visible={successVisible}
+            onClose={() => setSuccessVisible(false)}
+          
+          />
+        )}
     </SafeAreaView>
   );
 };
@@ -818,6 +911,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     alignItems: 'center',
     top: 0,
+    flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
 
   },
@@ -826,7 +920,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 10,
     elevation: 5,
-    width: '100%',
+    width: Dimensions.get('screen').width,
     height: Dimensions.get('window').height/2,
   },
  

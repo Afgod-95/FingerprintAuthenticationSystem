@@ -38,5 +38,3 @@ export const levels = [
     "Level 300",
     "Level 400"
 ]
-
-// Function to get dates from 2012 to current date

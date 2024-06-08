@@ -7,22 +7,25 @@ import axios from 'axios'
 import { Feather } from '@expo/vector-icons'
 import CircularLoader from '../component/CircularLoader'
 import FingerprintAnimation from '../component/FingerprintAnimation'
+import { ErrorMessages, SuccessMessages } from '../component/Messages'
 
 const Login = () => {
     const navigate = useNavigation()
     const [isVisible, setIsVisible] = useState(false)
-    
+    const [errorMessage, setErrorMessage] = useState(null)
+    const [successMessage, setSuccessMessage] = useState(null)
     const [user, setUser] = useState({
       studentID: '',
       password:''
     })
 
     const [isLoading, setIsLoading] = useState(false)
+    const [errorVisible, setErrorVisible] = useState(false)
+    const [successVisible, setSuccessVisible] = useState(false)
 
     const handleNavigation = () => {
       navigate.navigate('Register')
     }
-
 
     const backendURL = "https://fingerprintenabled.onrender.com/api/auth/login"
   
@@ -37,89 +40,88 @@ const Login = () => {
     
         if (response.data.error) {
           setIsLoading(false)
-          Alert.alert('Error', response.data.error);
-          console.error(response.data.error);
+          setErrorMessage(response.data.error)
+          setErrorVisible(true)
         } 
-        else if (response.status === 200) {
+        else {
           setIsLoading(false)
-          const { token } = response.data
-          if ( token ){
-            Alert.alert('Message', response.data.message)
-            navigate.navigate('Home', {studentID: userData.studentID})
-          }
-          else{
-            Alert.alert('Error', 'User not found')
-          }
-         
+          setSuccessMessage(response.data.message)
+          setSuccessVisible(true)
           setUser("")
         }
+
        
       } catch (error) {
-        if (error.response){
-          setIsLoading(false)
-          Alert.alert('Error',  error.response.data.error);
-          console.log(error.response.data)
-        }
-        else if (error.request){
-          setIsLoading(false)
-          Alert.alert('Error', error.request);
-          console.log(error.request)
-        }
-        else if (error){
-          setIsLoading(false)
-          Alert.alert('Error', error.message);
-          console.log(`Error: ${error.message}`)
+        setIsLoading(false)
+        if (error.response) {
+          setErrorMessage(error.response.data.error)
+          setErrorVisible(true)
+        } else if (error.request) {
+          setErrorMessage('Network error')
+          setErrorVisible(true)
+        } else {
+          setErrorMessage(error.message)
+          setErrorVisible(true)
         }
       }
     }
-    
 
-    const handleLogin = async () => {
+    useEffect(() => {
+      if (successVisible) {
+        setTimeout(() => {
+          setSuccessVisible(false);
+          navigate.navigate('Home', { studentID: user.studentID });
+        }, 3000); 
+      }
+    }, [successVisible]);
+    
+    const handleFingerprintScan = async () => {
       try {
         setIsLoading(true)
-        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const hasHardware = await LocalAuthentication.hasHardwareAsync()
         if (!hasHardware) {
-          Alert.alert('Error', 'Fingerprint authentication is not supported on this device');
-          return;
+          setErrorMessage('Fingerprint authentication is not supported on this device')
+          setErrorVisible(true)
+          return
         }
-        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync()
         if (!isEnrolled) {
-          Alert.alert('Error', 'No fingerprint enrolled on this device.');
-          
-          return;
+          setErrorMessage('No fingerprint enrolled on this device.')
+          setErrorVisible(true)
+          return
         }
         const result = await LocalAuthentication.authenticateAsync({
           promptMessage: 'Authenticate with your fingerprint',
-        });
+        })
     
         if (result.success) {
-          const fingerprintData = result.success.toString();
-          userLogin(fingerprintData, user); 
+          const fingerprintData = result.success.toString()
+          userLogin(fingerprintData, user)
         } else {
           setIsLoading(false)
-          Alert.alert('Error', 'Fingerprint authentication failed');
-          
+          setErrorMessage('Fingerprint authentication failed')
+          setErrorVisible(true)
         }
        
       } catch (error) {
-        Alert.alert('Error', error.message)
-        
+       setErrorMessage(error.message)
+       setErrorVisible(true)
       }
-    };
+    }
     
   return (
-   <SafeAreaView style = {styles.container}>
-      <KeyboardAvoidingView style = {styles.innerContainer}>
-        <Text style = {styles.headerText}>Login</Text>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView style={styles.innerContainer}>
+        <Text style={styles.headerText}>Login</Text>
 
-        <ScrollView showsVerticalScrollIndicator = {false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <FingerprintAnimation /> 
-          <View style = {{marginBottom: 10}}>
-              <Text style = {styles.textMedium}>Fingerprint Auth</Text>
-              <Text style = {styles.textSmall}>Authenticate using your fingerprint</Text>
+          <View style={{ marginBottom: 10 }}>
+            <Text style={styles.textMedium}>Fingerprint Auth</Text>
+            <Text style={styles.textSmall}>Authenticate using your fingerprint</Text>
           </View>
 
-          <View style = {styles.container}>
+          <View style={styles.container}>
             <TextInput
               style={[styles.input, { margin: 10 }]}
               placeholder="Enter your student ID"
@@ -138,7 +140,7 @@ const Login = () => {
               />
 
               <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
-                style = {{
+                style={{
                   position: 'absolute',
                   right: 18, top: 24,
                   height: 40, 
@@ -148,27 +150,34 @@ const Login = () => {
                 <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
               </TouchableOpacity>
             </View>
-            
           </View>
           
-          <Pressable style = {styles.button} onPress={handleLogin} disabled = {isLoading}>
+          <Pressable style={styles.button} onPress={handleFingerprintScan} disabled={isLoading}>
             {isLoading ? (
               <CircularLoader />
             ) : (
-              <Text style = {{color: '#fff', fontSize: 20, fontWeight: 'bold'}}>Proceed</Text>
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>Proceed</Text>
             )}  
           </Pressable>
-          <View style = {{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap'}}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Text style={styles.textSmall}>Don't have an account?</Text>
             <TouchableOpacity onPress={handleNavigation} >
-                <Text style={[styles.textSmall, { color: '#0CEEF2', }]}> Click here</Text>
+                <Text style={[styles.textSmall, { color: '#0CEEF2' }]}> Click here</Text>
             </TouchableOpacity>
           </View>
-
         </ScrollView>
+        <ErrorMessages
+          errorMessage={errorMessage}
+          visible={errorVisible}
+          onClose={() => setErrorVisible(false)}
+        />
+        <SuccessMessages
+          successMessage={successMessage}
+          visible={successVisible}
+          onClose={() => setSuccessVisible(false)}
+        />
       </KeyboardAvoidingView>
-        
-   </SafeAreaView>
+    </SafeAreaView>
   )
 }
 
@@ -179,12 +188,10 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center'
     },
-
     innerContainer: {
       justifyContent: 'center',
       alignItems: 'center',
     },
-  
     headerText: {
       color: 'white',
       fontSize: 45,
@@ -199,11 +206,10 @@ const styles = StyleSheet.create({
       textAlign: 'center',
     },
     textSmall: {
-        color: 'white',
-        fontSize: 18,
-        textAlign: 'center',
+      color: 'white',
+      fontSize: 18,
+      textAlign: 'center',
     },
-
     input: {
       borderWidth: 0.5,
       margin: 15,
@@ -214,7 +220,6 @@ const styles = StyleSheet.create({
       padding: 10,
       color: '#acadac',
     },
-    
     button: {
       margin: 15,
       width: Dimensions.get('window').width - 30,
@@ -224,7 +229,6 @@ const styles = StyleSheet.create({
       borderRadius: 20,
       padding: 10,
     }
-    
-  });
-  
+})
+
 export default Login
