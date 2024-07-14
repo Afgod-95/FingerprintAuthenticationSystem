@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
+const nodemailer = require('nodemailer')
 
 const generateToken = (userId) => {
   const token = jwt.sign({ userId }, process.env.SECRET_KEY, { expiresIn: '1h' });
@@ -45,7 +46,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 1024 * 1024 * 50 // 50MB
+    fileSize: 1024 * 1024 * 50 
   },
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
@@ -54,6 +55,43 @@ const upload = multer({
     cb(null, true);
   }
 }).single('image');
+
+
+// sending email messages for password reset
+const sendEmail = (email) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL,
+      password: process.env.EMAIL_PASS
+    }
+  })
+
+  //email content 
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: 'Password Reset',
+    html: `
+      <p>Hello,</p>
+      <p>Your verification code is: <strong style="font-size: 20px;">${otp}</strong></p>
+      <p>Verification link: <a href="${verificationLink}">${verificationLink}</a></p>
+      <p>OTP expires in 30 minutes</p>
+      <p>If you did not make this request, please ignore this email, and your password will remain unchanged.</p>
+    `,
+  }
+  return new Promise((resolve, reject) => {
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        reject (error)
+      }
+      else {
+        resolve(info)
+      }
+    })
+  })
+
+}
 
 const fingerprintController = {
   // Register
@@ -196,9 +234,14 @@ const fingerprintController = {
 
       const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
       const token = generateToken(student._id);
+      await student.findOneAndUpdate(
+        { email },
+        { $set: { status: "Present" } },
+        { new: true }
+      );
       res.status(200).json({
         success: true,
-        message: "Access Granted",
+        message: "Login Successful",
         token
       });
     } catch (error) {
@@ -209,6 +252,64 @@ const fingerprintController = {
     }
   },
 
+
+  // send reset password
+  sendResetPassword: async (req, res) => {
+    try{
+      const { email } = req.body;
+      if (!email){
+        return res.status(400).json({
+          error: "Please enter all fields"
+        });
+      }
+      const student = await studentData.findOne({ email: email })
+      if (!student){
+        return res.status(400).json({
+          error: "Email not found"
+        });
+      }
+
+      sendEmail(email)
+      res.status(200).json({
+        message: 'Please, a password reset link have been sent to your email.  Please check your inbox or spam folder for the code'
+      })
+    }
+    catch (error) {
+      console.error(`Error: ${error.message}`)
+    }
+  },
+
+  //password reset
+  updatePassword: async (req, res) => {
+    try {
+      const { newPassword, confirmNewPassword } = req.body
+      if (!newPassword || !confirmNewPassword){
+        return res.status(400).json({
+          error: "Please enter all fields"
+        });
+      }
+
+      if (newPassword !== confirmNewPassword){
+        return res.status(400).json({
+          error: "Passwords does not match"
+        });
+      }
+
+      await studentData.findOneAndUpdate(
+        { email },
+        { $set: { password: newPassword } },
+        { new: true }
+      );
+
+      res.status(200).json({
+        message: 'Your password have been resetted successfully.'
+      })
+    } 
+    catch (error) {
+      console.log(`Error: ${error.message}`)
+    }
+  },
+  
   // Fetching student data
   getStudentID: async (req, res) => {
     try {

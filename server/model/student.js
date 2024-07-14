@@ -74,6 +74,11 @@ const studentSchema = new mongoose.Schema({
     fingerprint: {
         type: String,
     },
+    status: {
+        type: String,
+        enum: ["Present", "Absent"],
+        default: 'Absent'
+    },
     token: String,
     createdAt: {
         type: Date,
