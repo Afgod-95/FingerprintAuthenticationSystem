@@ -200,7 +200,6 @@ const fingerprintController = {
       const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
       const token = generateToken(student._id);
       await student.findOneAndUpdate(
-        { email },
         { $set: { status: "Present" } },
         { new: true }
       );
