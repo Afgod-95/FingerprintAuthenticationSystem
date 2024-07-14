@@ -5,7 +5,7 @@ const router = express.Router()
 router.post('/api/auth/login', fingerprintController.login)
 router.post('/api/auth/register', fingerprintController.register)
 router.get('/api/student/:id', fingerprintController.getStudentID)
-router.post('/api/auth/forgot-password', fingerprintController.sendResetPassword)
-router.post('/api/auth/reset-password', fingerprintController.sendResetPassword)
+router.post('/api/auth/forgot-password', fingerprintController.ResetPassword)
+router.post('/api/auth/reset-password', fingerprintController.updatePassword)
 
 module.exports = router
