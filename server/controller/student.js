@@ -200,9 +200,11 @@ const fingerprintController = {
       const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
       const token = generateToken(student._id);
       await studentData.findOneAndUpdate(
-        { $set: { status: "Present" } },
-        { new: true }
+        { studentID: studentID }, 
+        { $set: { status: "Present" } }, 
+        { new: true } 
       );
+      
       res.status(200).json({
         success: true,
         message: "Login Successful",
@@ -242,7 +244,7 @@ const fingerprintController = {
   //password reset
   updatePassword: async (req, res) => {
     try {
-      const { newPassword, confirmNewPassword } = req.body
+      const { newPassword, confirmNewPassword, email } = req.body
       if (!newPassword || !confirmNewPassword){
         return res.status(400).json({
           error: "Please enter all fields"
@@ -256,7 +258,7 @@ const fingerprintController = {
       }
 
       await studentData.findOneAndUpdate(
-        { email },
+        { email: email },
         { $set: { password: newPassword } },
         { new: true }
       );
