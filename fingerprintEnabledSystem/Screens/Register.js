@@ -171,7 +171,7 @@ const Register = () => {
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
               aspect: [4, 3],
-              quality: 0.5,
+              quality: 1,
             });
   
             console.log(result)
@@ -282,7 +282,7 @@ const Register = () => {
               setErrorVisible(true)
             } 
             else {
-              
+              const { token } = response.data
               await AsyncStorage.setItem('token', token);
               setSuccessMessage(response.data.message)
               setSuccessVisible(true)
@@ -373,7 +373,7 @@ const Register = () => {
         return true;
 
       case 3:
-        if (!user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear) {
+        if (!user.department || !user.faculty || !user.program || !user.level || !user.enrollmentYear || !user.yearOfCompletion) {
           setErrorMessage('Please fill in all required fields.');
           setErrorVisible(true)
           return false;

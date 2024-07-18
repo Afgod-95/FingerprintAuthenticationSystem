@@ -4,38 +4,30 @@ import { View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, StyleShe
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as LocalAuthentication from 'expo-local-authentication'
 import axios from 'axios'
-import { Feather } from '@expo/vector-icons'
 import CircularLoader from '../component/CircularLoader'
 import FingerprintAnimation from '../component/FingerprintAnimation'
 import { ErrorMessages, SuccessMessages } from '../component/Messages'
 
-const Login = () => {
+const ForgotPassword = () => {
   const navigate = useNavigation()
   const [isVisible, setIsVisible] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
   const [user, setUser] = useState({
-    studentID: '',
-    password:''
+    email: ''
   })
 
   const [isLoading, setIsLoading] = useState(false)
   const [errorVisible, setErrorVisible] = useState(false)
   const [successVisible, setSuccessVisible] = useState(false)
 
-  const handleNavigation = () => {
-    navigate.navigate('Register')
-  }
+  const backendURL = "https://fingerprintenabled.onrender.com/api/auth/forgot-password"
 
-  const backendURL = "https://fingerprintenabled.onrender.com/api/auth/login"
-
-  const userLogin = async (fingerprint, userData) => {
+  const userLogin = async (user) => {
     try {
       setIsLoading(true)
       const response = await axios.post(backendURL, {
-        fingerprint: fingerprint,
-        studentID: userData.studentID,
-        password: userData.password
+        email: user
       });
   
       if (response.data.error) {
@@ -70,7 +62,7 @@ const Login = () => {
     if (successVisible) {
       setTimeout(() => {
         setSuccessVisible(false);
-        navigate.navigate('Home', { studentID: user.studentID });
+        navigate.navigate('Reset-Password', { email: user.email });
       }, 3000); 
     }
   }, [successVisible]);
@@ -96,7 +88,7 @@ const Login = () => {
   
       if (result.success) {
         const fingerprintData = result.success.toString()
-        userLogin(fingerprintData, user)
+        userLogin(user.email)
       } else {
         setIsLoading(false)
         setErrorMessage('Fingerprint authentication failed')
@@ -109,56 +101,25 @@ const Login = () => {
     }
   }
 
-  //navigate to forgot password 
-  const forgotPassword = () => {
-    navigate.navigate('Forgot-password')
-  } 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView style={styles.innerContainer}>
-        <Text style={styles.headerText}>Login</Text>
-
         <ScrollView showsVerticalScrollIndicator={false}>
           <FingerprintAnimation /> 
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.textMedium}>Fingerprint Auth</Text>
-            <Text style={styles.textSmall}>Authenticate using your fingerprint</Text>
+            <Text style={styles.textMedium}>Password Reset</Text>
+            <Text style={styles.textSmall}>Please Enter the Email Used During Registration</Text>
           </View>
-
           <View style={styles.container}>
             <TextInput
               style={[styles.input, { margin: 10 }]}
-              placeholder="Enter your student ID"
+              placeholder="Eg: johndoe@gmail.com"
               placeholderTextColor="#acadac"
-              value={user.studentID}
-              onChangeText={(text) => setUser({ ...user, studentID: text })}
+              value={user.email}
+              onChangeText={(text) => setUser({ ...user, email: text })}
             />
-            <View>
-              <TextInput
-                style={[styles.input, { margin: 10 }]}
-                placeholder="Enter password"
-                secureTextEntry={!isVisible}
-                placeholderTextColor="#acadac"
-                value={user.password}
-                onChangeText={(text) => setUser({ ...user, password: text })}
-              />
-
-              <TouchableOpacity onPress={() => setIsVisible(!isVisible)} 
-                style={{
-                  position: 'absolute',
-                  right: 18, top: 24,
-                  height: 40, 
-                  width: 40
-                }}
-              >
-                <Feather name={isVisible ? 'eye' : 'eye-off'} size={24} color="#0CEEF2" />
-              </TouchableOpacity>
-            </View>
           </View>
 
-          <Pressable style ={{flex: 1, marginRight: 20}} onPress={forgotPassword}>
-            <Text style = {{textAlign: 'right', color: '#fff', fontSize: 16}}>Forgot Password?</Text>
-          </Pressable>
           
           <Pressable style={styles.button} onPress={handleFingerprintScan} disabled={isLoading}>
             {isLoading ? (
@@ -167,12 +128,6 @@ const Login = () => {
               <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>Proceed</Text>
             )}  
           </Pressable>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Text style={styles.textSmall}>Don't have an account?</Text>
-            <TouchableOpacity onPress={handleNavigation} >
-              <Text style={[styles.textSmall, { color: '#0CEEF2' }]}> Click here</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
         <ErrorMessages
           errorMessage={errorMessage}
@@ -239,4 +194,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default Login
+export default ForgotPassword

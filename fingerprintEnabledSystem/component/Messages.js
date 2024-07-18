@@ -84,9 +84,6 @@ const SuccessMessages = ({ successMessage, visible, onClose }) => {
                   <Text style={[styles.messageText, {fontWeight: 'bold', color: '#04d120'}]}>Success: </Text>
                   <Text style={styles.messageText}>{successMessage}</Text>
                 </View>
-                <TouchableOpacity style={[styles.closeButton, {backgroundColor: '#04d120'}]} onPress={onClose}>
-                    <Text style={styles.closeButtonText}>Ok</Text>
-                </TouchableOpacity>
             </View>
         </Animated.View>
     )

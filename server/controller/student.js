@@ -232,6 +232,7 @@ const fingerprintController = {
           error: "Email not found"
         });
       }
+
     }
     catch (error) {
       console.error(`Error: ${error.message}`)

@@ -9,7 +9,6 @@ import { Buffer } from 'buffer'
 
 
 const Home = () => {
-  const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
   const [user, setUser] = useState({
     profile: null,
@@ -25,6 +24,7 @@ const Home = () => {
     program: null,
     level: null,
     enrollmentYear: null,
+    yearOfCompletion: null,
   });
   const route = useRoute();
 
@@ -35,12 +35,13 @@ const Home = () => {
         setIsLoading(true)
         const id = route.params?.studentID;
         const response = await axios.get(`https://fingerprintenabled.onrender.com/api/student/${id}`);
-        const { dateOfBirth, yearOfEnrollment, ...userData } = response.data.student;
+        const { dateOfBirth, yearOfEnrollment, yearOfCompletion, ...userData } = response.data.student;
        
         setUser({
           ...userData,
           dateOfBirth: formatDate(dateOfBirth),
           enrollmentYear: formatDate(yearOfEnrollment),
+          yearOfCompletion: formatDate(yearOfCompletion)
         });
       } catch (error) {
         console.log(error.message);
@@ -73,20 +74,13 @@ const Home = () => {
         <>
           <View style={styles.topContainer}>
             <Text style={styles.headerText}>Student Data</Text>
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.5)']}
-              start={{ x: 1, y: 0.1 }}
-              end={{ x: 0.8, y: 1 }}
-              style={styles.gradientBorder}
-            >
               {user.image && (
                 <Image
                   source={{ uri: `data:${user.image.contentType};base64,${Buffer.from(user.image.data.data).toString('base64')}` }}
                   style={styles.image} />
               )}
-            </LinearGradient>
-
-          </View><View></View><ScrollView showsVerticalScrollIndicator={true}>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={true}>
               <View style={{ margin: 15 }}>
                 <Text style={styles.textMedium}>Basic Information</Text>
                 <Text style={styles.textSmall}>Name: {user?.name}</Text>
@@ -106,8 +100,10 @@ const Home = () => {
                 <Text style={styles.textSmall}>Student ID: {user?.studentID}</Text>
                 <Text style={styles.textSmall}>Level: {user?.level}</Text>
                 <Text style={styles.textSmall}>Year of enrollment: {user?.enrollmentYear}</Text>
+                <Text style={styles.textSmall}>Year of Completion: {user?.yearOfCompletion}</Text>
               </View>
-            </ScrollView><IconsNavigation />
+            </ScrollView>
+            <IconsNavigation />
           </>
       )}
       
@@ -152,7 +148,7 @@ const styles = StyleSheet.create({
   image: {
     width: Dimensions.get('screen').width,
     height: 250,
-    objectFit: 'scale-down'
+    borderRadius: 20
   },
 });
 
