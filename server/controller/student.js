@@ -231,12 +231,12 @@ const fingerprintController = {
       const student = await studentData.findOne({ email: email })
       if (!student){
         return res.status(400).json({
-          error: "Email not found"
+          error: "Oops, email not found. Please check your email address."
         });
       }
 
       return res.status(200).json({
-        message: 'Redirecting....'
+        message: 'Redirecting to reset password screen...'
       })
 
     }
@@ -257,7 +257,7 @@ const fingerprintController = {
 
       if (newPassword !== confirmNewPassword){
         return res.status(400).json({
-          error: "Passwords does not match"
+          error: "Password does not match"
         });
       }
       const hashedPassword = await bcrypt.hash(newPassword, 12)
