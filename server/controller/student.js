@@ -260,10 +260,10 @@ const fingerprintController = {
           error: "Passwords does not match"
         });
       }
-
+      const hashedPassword = await bcrypt.hash(newPassword, 12)
       await studentData.findOneAndUpdate(
         { email: email },
-        { $set: { password: newPassword } },
+        { $set: { password: hashedPassword } },
         { new: true }
       );
 
