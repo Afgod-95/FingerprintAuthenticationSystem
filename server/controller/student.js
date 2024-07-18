@@ -235,6 +235,10 @@ const fingerprintController = {
         });
       }
 
+      return res.status(200).json({
+        message: 'Redirecting....'
+      })
+
     }
     catch (error) {
       console.error(`Error: ${error.message}`)
