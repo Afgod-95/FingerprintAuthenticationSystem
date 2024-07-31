@@ -279,22 +279,34 @@ const fingerprintController = {
   //logout 
   logout: async (req, res) => {
     try {
-      const { studentId } = req.body
-      await studentData.findOne(
+      const { studentId } = req.body;
+      const result = await studentData.updateOne(
         { studentID: studentId },
-        { status: 'Absent',  token: null},
-      )
+        {
+          $set: {
+            status: 'Absent',
+            token: null
+          }
+        }
+      );
+  
+      if (result.modifiedCount === 0) {
+        return res.status(404).json({
+          message: 'Student not found or no changes made.',
+        });
+      }
+  
       res.status(200).json({
         message: 'You have been logged out successfully.',
-      })
-    }
-    catch (error) {
-      console.log(error.message)
+      });
+    } catch (error) {
+      console.log(error.message);
       res.status(500).json({
-        message: 'Oops! An error occured whilst logging out'
-      })
+        message: 'Oops! An error occurred whilst logging out.',
+      });
     }
   },
+  
   
   // Fetching student data
   getStudentID: async (req, res) => {
