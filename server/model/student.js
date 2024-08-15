@@ -29,11 +29,13 @@ const studentSchema = new mongoose.Schema({
     },
     studentID: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     email: {
         type: String,
         required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -79,12 +81,20 @@ const studentSchema = new mongoose.Schema({
         enum: ["Present", "Absent"],
         default: 'Absent'
     },
+    seatNumber: {
+        type: String, 
+        unique: true
+    },
     token: String,
     createdAt: {
         type: Date,
         default: Date.now
     },
 })
+
+studentSchema.index({ studentID: 1 });
+studentSchema.index({ email: 1 });
+
 
 
 const studentData = mongoose.model('studentData', studentSchema)

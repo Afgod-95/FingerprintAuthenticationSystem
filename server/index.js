@@ -54,10 +54,7 @@ app.use((err, req, res, next) => {
 });
 
 //database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
+mongoose.connect(process.env.MONGODB_URI).then(() => {
     app.listen(PORT, ()=> {
         console.log(`Server running on port ${PORT}`)
     })
