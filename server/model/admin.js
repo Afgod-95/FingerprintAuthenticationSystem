@@ -1,7 +1,6 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const adminSchema = new mongoose.Schema({
-    
     image: {
         name: {
             type: String, 
@@ -21,23 +20,20 @@ const adminSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-
     email: {
         type: String,
         required: true
     },
-
     password: {
         type: String,
-        requird: true
+        required: true // Fixed typo: 'requird' -> 'required'
     },
     token: {
         type: String,
-    },
-    
-    timeStamps,
+    }
+}, {
+    timestamps: true 
+});
 
-})
-
-const adminModel = mongoose.model('admin', adminSchema)
+const adminModel = mongoose.model('admin', adminSchema);
 module.exports = adminModel;

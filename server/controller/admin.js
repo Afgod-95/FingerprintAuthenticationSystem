@@ -9,6 +9,55 @@ const multer = require('multer')
 const jwt = require('jsonwebtoken')
 const { v4: uuidv4 } = require('uuid');
 
+const zkteco = require('zkteco-js');
+
+const device = new zkteco();
+
+const captureFingerprint = async () => {
+    let fingerprint;
+    try {
+        // Open the socket connection
+        await device.createSocket();
+        
+        // Ensure the socket is open
+        if (!device.socket || !device.socket.writable) {
+            throw new Error('Socket is not open');
+        }
+
+        // Capture the fingerprint
+        fingerprint = await device.getFingerprint();
+
+        // Ensure disconnection happens after successful operation
+        if (device.socket && device.socket.writable) {
+            await device.disconnect();
+        }
+
+        return fingerprint;
+    } catch (error) {
+        // Attempt to disconnect in case of errors
+        try {
+            if (device.socket && device.socket.writable) {
+                await device.disconnect();
+            }
+        } catch (disconnectError) {
+            console.error(`Disconnect Error: ${disconnectError.message}`);
+        }
+        console.error(`Fingerprint Error: ${error.message}`);
+        throw error; // Propagate the error
+    }
+};
+
+// Example usage
+captureFingerprint()
+    .then(fingerprint => console.log('Fingerprint captured:', fingerprint))
+    .catch(error => console.error('Error capturing fingerprint:', error));
+
+
+
+
+
+
+
 
 //generate tokens 
 const generateToken = (user) => {
@@ -38,7 +87,7 @@ const generate_Student_SeatNumber = async (studentID) => {
     
 //multer setup
 const storage = multer.memoryStorage()
-const upload = ({
+const upload = multer({
     storage: storage,
     fileFilter(req, file, cb) {
         if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
@@ -110,14 +159,14 @@ const adminController = {
     //admin login 
     adminLogin: async (req, res) => {
         try {
-            const { name, password } = req.body;
-            if (!name || !password){
+            const { email, password } = req.body;
+            if (!email || !password){
                 return res.status(400).json({
                     message: 'Oops! All fields are required'
                 });
             }
     
-            const adminExist = await adminModel.findOne({ name: name });
+            const adminExist = await adminModel.findOne({ email: email });
             if (!adminExist){
                 return res.status(400).json({
                     message: 'Oops! Name not found'
@@ -290,106 +339,100 @@ const adminController = {
     studentRegistration: async (req, res) => {
         try {
             upload(req, res, async (err) => {
-                try {
-                    if (err) {
-                        console.log('Error: Failed to upload profile image', err);
-                        return res.status(400).json({
-                            message: "Failed to upload profile image"
-                        });
-                    }
-                    const {
-                        name,
-                        gender,
-                        dateOfBirth,
-                        studentID,
-                        email,
-                        password,
-                        phoneNumber,
-                        department,
-                        faculty,
-                        program,
-                        level,
-                        yearOfEnrollment,
-                        yearOfCompletion,
-                        fingerprint,
-                    } = req.body;
-    
-                    if (!req.file) {
-                        console.log("No profile image received");
-                        return res.status(400).json({
-                            message: "No profile image received"
-                        });
-                    }
-    
-                    if (!password) {
-                        return res.status(400).json({
-                            message: 'Password is required'
-                        });
-                    }
-    
-                    //checking for existing students
-                    const existingStudent = await studentModel.findOne({ email });
-                    if (existingStudent && existingStudent.phoneNumber === phoneNumber) {
-                        return res.status(401).json({
-                            message: 'Email and phone number already exist',
-                        });
-                    }
-    
-                    const studentIdExist = await studentModel.findOne({ studentID });
-                    if (studentIdExist) {
-                        return res.status(401).json({
-                            message: 'Student ID already exists'
-                        });
-                    }
-    
-                    const hashedPassword = await bcrypt.hash(password, 12);
-    
-                    const newStudent = new studentModel({
-                        image: {
-                            name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
-                            data: req.file.buffer, // Use buffer since memory storage is used
-                            contentType: req.file.mimetype
-                        },
-                        name,
-                        gender,
-                        dateOfBirth,
-                        studentID,
-                        email,
-                        password: hashedPassword,
-                        phoneNumber,
-                        department,
-                        faculty,
-                        program,
-                        level,
-                        yearOfEnrollment,
-                        yearOfCompletion,
-                        seatNumber: await generate_Student_SeatNumber(studentID),
-                        fingerPrintData: true,
-                        fingerprint: crypto.createHash('sha256').update(fingerprint || '').digest('hex'),
-                    });
-    
-                    await newStudent.save();
-    
-                    if (newStudent) {
-                        const token = generateToken(newStudent._id);
-                        res.status(200).json({
-                            success: true,
-                            message: 'Registration successful',
-                            newStudent,
-                            token
-                        });
-                        console.log('Registration successful', newStudent);
-                    } else {
-                        res.status(500).json({
-                            error: 'Failed to register user'
-                        });
-                    }
-                } catch (error) {
-                    console.log(error.message);
+                if (err) {
+                    console.log('Error: Failed to upload profile image', err);
                     return res.status(400).json({
-                        error: error.message
+                        message: "Failed to upload profile image"
                     });
                 }
+    
+                const {
+                    name,
+                    gender,
+                    dateOfBirth,
+                    studentID,
+                    email,
+                    password,
+                    phoneNumber,
+                    department,
+                    faculty,
+                    program,
+                    level,
+                    yearOfEnrollment,
+                    yearOfCompletion,
+                } = req.body;
+    
+                if (!req.file) {
+                    console.log("No profile image received");
+                    return res.status(400).json({
+                        message: "No profile image received"
+                    });
+                }
+    
+                if (!password) {
+                    return res.status(400).json({
+                        message: 'Password is required'
+                    });
+                }
+    
+                // Checking for existing students
+                const existingStudent = await studentModel.findOne({ email });
+                if (existingStudent && existingStudent.phoneNumber === phoneNumber) {
+                    return res.status(401).json({
+                        message: 'Email and phone number already exist',
+                    });
+                }
+    
+                const studentIdExist = await studentModel.findOne({ studentID });
+                if (studentIdExist) {
+                    return res.status(401).json({
+                        message: 'Student ID already exists'
+                    });
+                }
+    
+                // Capture the fingerprint
+                const fingerprint = await captureFingerprint();
+    
+                if (!fingerprint) {
+                    return res.status(400).json({
+                        message: 'Failed to capture fingerprint'
+                    });
+                }
+    
+                const hashedPassword = await bcrypt.hash(password, 12);
+    
+                const newStudent = new studentModel({
+                    image: {
+                        name: `${uuidv4()}.${req.file.mimetype.split('/')[1]}`,
+                        data: req.file.buffer, // Use buffer since memory storage is used
+                        contentType: req.file.mimetype
+                    },
+                    name,
+                    gender,
+                    dateOfBirth,
+                    studentID,
+                    email,
+                    password: hashedPassword,
+                    phoneNumber,
+                    department,
+                    faculty,
+                    program,
+                    level,
+                    yearOfEnrollment,
+                    yearOfCompletion,
+                    seatNumber: await generate_Student_SeatNumber(studentID),
+                    fingerprintData: fingerprint.buffer // Save the fingerprint data
+                });
+    
+                await newStudent.save();
+    
+                const token = generateToken(newStudent._id);
+                res.status(200).json({
+                    success: true,
+                    message: 'Registration successful',
+                    newStudent,
+                    token
+                });
             });
         } catch (error) {
             console.log(error.message);
@@ -398,8 +441,54 @@ const adminController = {
             });
         }
     },
+    
 
+    //student login
+    studentLogin: async (req, res) => {
+        try {
+            // Capture the fingerprint of the student
+            const capturedFingerprint = await captureFingerprint();
+            
+            if (!capturedFingerprint) {
+                return res.status(400).json({ message: 'Failed to capture fingerprint' });
+            }
+            
+            // Find the student with the matching fingerprint
+            const student = await studentModel.findOne({ fingerprintData: capturedFingerprint.buffer });
+            
+            if (!student) {
+                return res.status(401).json({ message: 'Authentication failed: fingerprint not recognized' });
+            }
+            
+            // Generate a token for the student
+            const token = generateToken(student._id);
+            
+            // Return student data along with the token
+            res.status(200).json({
+                message: 'Login successful',
+                student: {
+                    name: student.name,
+                    studentID: student.studentID,
+                    email: student.email,
+                    phoneNumber: student.phoneNumber,
+                    department: student.department,
+                    faculty: student.faculty,
+                    program: student.program,
+                    level: student.level,
+                    yearOfEnrollment: student.yearOfEnrollment,
+                    yearOfCompletion: student.yearOfCompletion,
+                    seatNumber: student.seatNumber,
+                    dateOfBirth: student.dateOfBirth,
+                },
+                token
+            });
+        } catch (error) {
+            console.error(`Error during student login: ${error.message}`);
+            res.status(500).json({ message: 'An error occurred during login' });
+        }
+    },
 
+    
     //Fetch all students 
     getAllStudents: async (req, res) => {
         try {
@@ -587,5 +676,11 @@ const adminController = {
         }
     }
 };
+
+
+
+
+
+
 
 module.exports = adminController;

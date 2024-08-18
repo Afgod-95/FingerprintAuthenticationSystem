@@ -70,11 +70,8 @@ const studentSchema = new mongoose.Schema({
         required: true
     },
     fingerPrintData: {
-        type: Boolean,
-        default: false
-    },
-    fingerprint: {
-        type: String,
+        type: Buffer,
+        required: true
     },
     status: {
         type: String,
@@ -97,5 +94,5 @@ studentSchema.index({ email: 1 });
 
 
 
-const studentData = mongoose.model('studentData', studentSchema)
-module.exports = studentData
+const studentModel = mongoose.model('studentData', studentSchema)
+module.exports = studentModel

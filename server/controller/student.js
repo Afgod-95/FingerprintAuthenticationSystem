@@ -1,4 +1,4 @@
-const studentData = require('../model/student.js');
+const studentModel = require('../model/student.js');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
@@ -248,7 +248,7 @@ deleteStudentBy_ID: async (req, res) => {
         });
       }
 
-      const student = await studentData.findOne({ studentID });
+      const student = await studentModel.findOne({ studentID });
       if (!student) {
         return res.status(401).json({
           error: "Student ID not found",
@@ -264,7 +264,7 @@ deleteStudentBy_ID: async (req, res) => {
 
       const hashedFingerprint = crypto.createHash('sha256').update(fingerprint).digest('hex');
       const token = generateToken(student._id);
-      await studentData.findOneAndUpdate(
+      await studentModel.findOneAndUpdate(
         { studentID: studentID }, 
         { $set: { status: "Present" } }, 
         { new: true } 
@@ -293,7 +293,7 @@ deleteStudentBy_ID: async (req, res) => {
           error: "Please enter all fields"
         });
       }
-      const student = await studentData.findOne({ email: email })
+      const student = await studentModel.findOne({ email: email })
       if (!student){
         return res.status(400).json({
           error: "Oops, email not found. Please check your email address."
@@ -326,7 +326,7 @@ deleteStudentBy_ID: async (req, res) => {
         });
       }
       const hashedPassword = await bcrypt.hash(newPassword, 12)
-      await studentData.findOneAndUpdate(
+      await studentModel.findOneAndUpdate(
         { email: email },
         { $set: { password: hashedPassword } },
         { new: true }
@@ -345,7 +345,7 @@ deleteStudentBy_ID: async (req, res) => {
   logout: async (req, res) => {
     try {
       const { studentId } = req.body;
-      const result = await studentData.updateOne(
+      const result = await studentModel.updateOne(
         { studentID: studentId },
         {
           $set: {
@@ -377,7 +377,7 @@ deleteStudentBy_ID: async (req, res) => {
   getStudentID: async (req, res) => {
     try {
       const { id } = req.params;
-      const student = await studentData.findOne({ studentID: id });
+      const student = await studentModel.findOne({ studentID: id });
       if (!student) {
         return res.status(404).json({
           error: "Student not found"

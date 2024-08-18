@@ -2,8 +2,9 @@ const mongoose = require('mongoose')
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
-const router = require('./router/router')
+const router = require('./router/router.js')
 const dotenv = require('dotenv').config()
+const morgan = require('morgan')
 
 const app = express()
 const PORT = 5031
@@ -12,6 +13,7 @@ const PORT = 5031
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors()); // CORS middleware
+app.use(morgan('dev'))
 // Regular routes
 app.use(router);
 console.log('Routes added:');
