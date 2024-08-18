@@ -59,42 +59,43 @@ const AdminLogin = () => {
   const [errorVisible, setErrorVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
  
-  const adminLogin = async () => {
+  const adminLogin = async (e) => {
     try {
-      const { email, password } = values;
-      if (!emailRegex.test(email)) {
-        return setErrorMessage('Oops! Please enter a valid email');
-      }
+      e.preventDefault();
+      console.log('You clicked on this button')
+      setIsLoading(false)
+      const { email, password } = values
+      console.log(`Email: ${email}`)
+      console.log(`Password: ${password}`)
+      const response = await axios.post(
+        'https://fingerprintenabled.onrender.com/api/admin/login',
+        {
+          email: email,
+          password: password,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
 
-      setIsLoading(true);
-     
-      const response = await axios.post('http://localhost:5031/api/admin/login', {
-        email: email,
-        password: password
-      }); 
-
-      if (response.status !== 200) {
-        setErrorMessage(response.data.message || 'Login failed');
-        setErrorVisible(true);
-      } else {
-        setSuccessMessage(response.data.message);
-        setSuccessVisible(true);
-        navigate('/admin-login/dashboard');
+      if(response.status === 200){
+        setIsLoading(true)
+        console.log(response.data.message)
       }
+      else{
+        setIsLoading(true)
+        console.log(response.data.message)
+      }
+      
     } catch (error) {
-      console.log(`Error: ${error.message}`);
-      if (error.response) {
-        setErrorMessage(error.response.data.error || 'An error occurred');
-      } else if (error.request) {
-        setErrorMessage('Network error');
-      } else {
-        setErrorMessage(error.message);
-      }
-      setErrorVisible(true);
-    } finally {
-      setIsLoading(false);
+      console.log(error.message)
     }
-  };
+   
+
+  }
 
   return (
     <div

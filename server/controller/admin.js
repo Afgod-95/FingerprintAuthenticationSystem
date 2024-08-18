@@ -105,21 +105,21 @@ const adminController = {
                 try {
                     if (err){
                         return res.status(400).json({
-                            message: 'Ooops! No profile image received'
+                            error: 'Ooops! No profile image received'
                         });
                     }
     
                     const { name, email, password } = req.body;
                     if (!name || !email || !password) {
                         return res.status(400).json({
-                            message: 'Please all fields are required'
+                            error: 'Please all fields are required'
                         });
                     }
     
                     const adminExist = await adminModel.findOne({ email: email });
                     if (adminExist){
                         return res.status(400).json({
-                            message: 'Ooops! Admin already exists'
+                           error: 'Ooops! Admin already exists'
                         });
                     }
     
@@ -146,13 +146,13 @@ const adminController = {
                 } 
                 catch (error) {
                     console.log(`Error uploading profile image: ${error.message}`);
-                    return res.status(400).json({ message: error.message });
+                    return res.status(400).json({ error: error.message });
                 }
             });
         } 
         catch (error) {
             console.log(`Error message: ${error.message}`);
-            return res.status(400).json({ message: error.message });
+            return res.status(400).json({ error: error.message });
         }
     },
 
@@ -162,21 +162,21 @@ const adminController = {
             const { email, password } = req.body;
             if (!email || !password){
                 return res.status(400).json({
-                    message: 'Oops! All fields are required'
+                    error: 'Oops! All fields are required'
                 });
             }
     
             const adminExist = await adminModel.findOne({ email: email });
             if (!adminExist){
                 return res.status(400).json({
-                    message: 'Oops! Name not found'
+                    message: 'Oops! Email not found'
                 });
             }
     
             const hashedPassword = await bcrypt.compare(password, adminExist.password);
             if (!hashedPassword){
                 return res.status(400).json({
-                    message: 'Oops! Incorrect password'
+                    error: 'Oops! Incorrect password'
                 });
             }
     
@@ -186,7 +186,7 @@ const adminController = {
     
         } catch (error) {
             console.log(`Error message: ${error.message}`);
-            return res.status(500).json({ message: 'An error occurred' });
+            return res.status(500).json({ error: 'An error occurred' });
         }
     },
 
@@ -201,17 +201,17 @@ const adminController = {
         
             if (!result) {
                 return res.status(404).json({
-                    message: 'Admin not found or no changes made.',
+                    error: 'Admin not found or no changes made.',
                 });
             }
         
             res.status(200).json({
-                message: 'You have been logged out successfully.',
+                error: 'You have been logged out successfully.',
             });
         } catch (error) {
             console.log(error.message);
             res.status(500).json({
-                message: 'Oops! An error occurred whilst logging out.',
+               error: 'Oops! An error occurred whilst logging out.',
             });
         }
     },
@@ -223,20 +223,20 @@ const adminController = {
                 try {
                     if (err){
                         return res.status(400).json({
-                            message: 'Ooops! No profile image received'
+                            error: 'Ooops! No profile image received'
                         })
                     }
 
                     if (!req.file){
                         return res.status(400).json({
-                            message: 'Ooops! Profile image is required'
+                           error: 'Ooops! Profile image is required'
                         })
                     }
 
                     const { name, email, password } = req.body
                     if (!name || !email || !password) {
                         return res.status(400).json({
-                            message: 'Please all fields are required'
+                           error: 'Please all fields are required'
                         })
                     }
                     
@@ -342,7 +342,7 @@ const adminController = {
                 if (err) {
                     console.log('Error: Failed to upload profile image', err);
                     return res.status(400).json({
-                        message: "Failed to upload profile image"
+                        error: "Failed to upload profile image"
                     });
                 }
     
@@ -365,13 +365,13 @@ const adminController = {
                 if (!req.file) {
                     console.log("No profile image received");
                     return res.status(400).json({
-                        message: "No profile image received"
+                       error: "No profile image received"
                     });
                 }
     
                 if (!password) {
                     return res.status(400).json({
-                        message: 'Password is required'
+                        error: 'Password is required'
                     });
                 }
     
@@ -379,14 +379,14 @@ const adminController = {
                 const existingStudent = await studentModel.findOne({ email });
                 if (existingStudent && existingStudent.phoneNumber === phoneNumber) {
                     return res.status(401).json({
-                        message: 'Email and phone number already exist',
+                       error: 'Email and phone number already exist',
                     });
                 }
     
                 const studentIdExist = await studentModel.findOne({ studentID });
                 if (studentIdExist) {
                     return res.status(401).json({
-                        message: 'Student ID already exists'
+                        error: 'Student ID already exists'
                     });
                 }
     
@@ -395,7 +395,7 @@ const adminController = {
     
                 if (!fingerprint) {
                     return res.status(400).json({
-                        message: 'Failed to capture fingerprint'
+                        error: 'Failed to capture fingerprint'
                     });
                 }
     
@@ -450,14 +450,14 @@ const adminController = {
             const capturedFingerprint = await captureFingerprint();
             
             if (!capturedFingerprint) {
-                return res.status(400).json({ message: 'Failed to capture fingerprint' });
+                return res.status(400).json({ error: 'Failed to capture fingerprint' });
             }
             
             // Find the student with the matching fingerprint
             const student = await studentModel.findOne({ fingerprintData: capturedFingerprint.buffer });
             
             if (!student) {
-                return res.status(401).json({ message: 'Authentication failed: fingerprint not recognized' });
+                return res.status(401).json({ error: 'Authentication failed: fingerprint not recognized' });
             }
             
             // Generate a token for the student
@@ -484,7 +484,7 @@ const adminController = {
             });
         } catch (error) {
             console.error(`Error during student login: ${error.message}`);
-            res.status(500).json({ message: 'An error occurred during login' });
+            res.status(500).json({ error: 'An error occurred during login' });
         }
     },
 
@@ -494,14 +494,14 @@ const adminController = {
         try {
             const students = await studentModel.find(); 
             res.status(200).json({
-                message: 'Students data retrieved successfully',
+                error: 'Students data retrieved successfully',
                 students 
             });
         } 
         catch (error) {
             console.log(`Error: ${error.message}`);
             res.status(500).json({
-                message: 'Error! Failed to fetch students'
+                error: 'Error! Failed to fetch students'
             });
         }
     },
@@ -512,7 +512,7 @@ const adminController = {
            const { id } = req.params  
             if ( !id ) {
                 return res.status(400).json({
-                    message: 'Ooops! No student selected'
+                    error: 'Ooops! No student selected'
                 })
             }
 
@@ -524,7 +524,7 @@ const adminController = {
         catch (error) {
             console.log(`Error: ${error.message}`)
             res.status(500).json({
-                message: 'Error! Failed to delete student'
+                error: 'Error! Failed to delete student'
             })
         }
     },
@@ -540,7 +540,7 @@ const adminController = {
         catch (error) {
             console.log(`Error: ${error.message}`)
             res.status(500).json({
-                message: 'Error! Failed to delete students'
+                merror: 'Error! Failed to delete students'
             })
         }
     }, 
@@ -551,7 +551,7 @@ const adminController = {
             const { id } = req.params  
             if ( !id ) {
                 return res.status(400).json({
-                    message: 'Ooops! No student selected'
+                    error: 'Ooops! No student selected'
                 })
             }
            const student =  await studentModel.findByIdAndUpdate({ _id: id }, { new: true })
@@ -562,7 +562,7 @@ const adminController = {
         catch (error) {
             console.log(`Error: ${error.message}`)
             res.status(500).json({
-                message: 'Error, Failed to update student'
+                error: 'Error, Failed to update student'
             })
         }
     },
@@ -605,7 +605,7 @@ const adminController = {
                 res.download(filePath, fileName, (err) => {
                     if (err) {
                         console.error('Error sending file:', err);
-                        res.status(500).json({ message: 'Error generating CSV report' });
+                        res.status(400).json({ error: 'Error generating CSV report' });
                     }
                     fs.unlink(filePath, (err) => {
                         if (err) console.error('Error deleting file:', err);
@@ -661,18 +661,18 @@ const adminController = {
                 res.download(filePath, fileName, (err) => {
                     if (err) {
                         console.error('Error sending file:', err);
-                        res.status(500).json({ message: 'Error generating Excel report' });
+                        res.status(400).json({ error: 'Error generating Excel report' });
                     }
                     fs.unlink(filePath, (err) => {
                         if (err) console.error('Error deleting file:', err);
                     }); // Clean up the file after sending
                 });
             } else {
-                res.status(400).json({ message: 'Invalid file type specified. Please choose either "csv" or "excel".' });
+                res.status(400).json({ error: 'Invalid file type specified. Please choose either "csv" or "excel".' });
             }
         } catch (error) {
             console.error('Error generating report:', error.message);
-            res.status(500).json({ message: 'Internal Server Error' });
+            res.status(500).json({ error: 'Internal Server Error' });
         }
     }
 };
