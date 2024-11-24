@@ -5,7 +5,6 @@ const adminSchema = new mongoose.Schema({
         name: {
             type: String, 
             required: true, 
-            unique: true
         },
         data: {
             type: Buffer, 
@@ -26,14 +25,17 @@ const adminSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true // Fixed typo: 'requird' -> 'required'
+        required: true 
     },
-    token: {
+    role: {
         type: String,
+        enum: ['student', 'admin'], 
+        default: 'student'
     }
+
 }, {
     timestamps: true 
 });
 
-const adminModel = mongoose.model('admin', adminSchema);
+const adminModel = mongoose.model('adminData', adminSchema);
 module.exports = adminModel;

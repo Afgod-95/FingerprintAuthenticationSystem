@@ -6,30 +6,30 @@ const path = require('path');
 const fs = require('fs').promises;
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
-const nodemailer = require('nodemailer')
+const nodemailer = require('nodemailer');
 
-const generateToken = (userId) => {
-  const token = jwt.sign({ userId }, process.env.SECRET_KEY, { expiresIn: '1h' });
+
+//token generation
+const generateToken = (user) => {
+  const token = jwt.sign({ 
+      id: user._id, 
+      role: user.role 
+  }, process.env.SECRET_KEY, { expiresIn: '1 hour' });
   return token;
 };
 
 
-const studentMapNumber = {}; // Map to store seat numbers by studentID
-let seatCounter = 1; // Counter to generate unique seat numbers
+
+const studentMapNumber = {};
+let seatCounter = 1; 
 
 const generate_Student_SeatNumber = async (studentID) => {
-  // If a seat number is already assigned to this studentID, return it
   if (studentMapNumber[studentID]) {
     return studentMapNumber[studentID];
   }
-  
-  // Assign the next seat number to this studentID
   const seatNo = seatCounter;
   studentMapNumber[studentID] = seatNo;
-
-  // Increment the seat counter for the next student
   seatCounter += 1;
-
   return seatNo;
 };
 
@@ -41,8 +41,6 @@ const destinationFolder = 'E:/Native/FingerprintSystem/server/image';
 async function createDirectory() {
   try {
     await fs.mkdir(destinationFolder, { recursive: true });
-    console.log(destinationFolder);
-    console.log('Directory created successfully.');
   } catch (err) {
     if (err.code !== 'EEXIST') {
       console.error('Error creating destination folder:', err);

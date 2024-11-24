@@ -1,16 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormControl, Button, Box, TextField, IconButton } from '@mui/material';
 import { motion } from "framer-motion";
 import { buttonsBgColor, bgColor } from "../../constants/Colors";
 import { GoEyeClosed, GoEye } from "react-icons/go";
 import BottomSheet from "../../components/BottomSheet";
 import AdminForgotPassword from "./AdminForgotPassword";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import CircularLoader from "../../components/Loaders";
 import { useMediaQuery } from 'react-responsive';
 import { IoIosArrowRoundBack } from "react-icons/io";
-import { ErrorMessages, SuccessMessages } from "../../components/Messages.jsx";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { loginAdmin, refreshAccessToken, resetState, updateTokens } from "../../redux/reducers";
+
 
 const AdminLogin = () => {
   const [values, setValues] = useState({
@@ -53,49 +54,43 @@ const AdminLogin = () => {
   const isTablet = useMediaQuery({ query: '(min-width: 768px) and (max-width: 1023px)' });
   const isDesktop = useMediaQuery({ query: '(min-width: 1024px)' });
 
-  const [successMessage, setSuccessMessage] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [successVisible, setSuccessVisible] = useState(false);
-  const [errorVisible, setErrorVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
  
-  const adminLogin = async (e) => {
-    try {
-      e.preventDefault();
-      console.log('You clicked on this button')
-      setIsLoading(false)
-      const { email, password } = values
-      console.log(`Email: ${email}`)
-      console.log(`Password: ${password}`)
-      const response = await axios.post(
-        'https://fingerprintenabled.onrender.com/api/admin/login',
-        {
-          email: email,
-          password: password,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      
+  const { loading, isAuthenticated } = useSelector(state => state.admin)
+  const dispatch = useDispatch();
 
-      if(response.status === 200){
-        setIsLoading(true)
-        console.log(response.data.message)
-      }
-      else{
-        setIsLoading(true)
-        console.log(response.data.message)
-      }
-      
-    } catch (error) {
-      console.log(error.message)
+  
+  useEffect(() => {
+    dispatch(resetState())
+  }, [dispatch])
+
+  useEffect(() => {
+    if(isAuthenticated){
+      navigate('/admin/dashboard')
     }
-   
+  }, [isAuthenticated])
 
+
+  console.log(`Auth: ${isAuthenticated}`)
+  
+  const adminLogin = async (e) => {
+    e.preventDefault()
+   
+    const credentials = {
+      email: values.email,
+      password: values.password
+    }
+
+    dispatch(loginAdmin(credentials))
+    .unwrap()
+    .then(() => {
+      navigate('/admin/dashboard');
+    })
+    .catch((error) => {
+        console.error('Failed to login:', error);
+    });
+   
   }
+
 
   return (
     <div
@@ -132,11 +127,11 @@ const AdminLogin = () => {
         }}
       >
         <div 
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/')}
           style={{ color: '#acadac', alignItems: 'center', display: 'flex', gap: '1rem', cursor: 'pointer' }}
         >
-          <IoIosArrowRoundBack style={{ fontSize: '1.5rem' }} />
-          <h4>Go back</h4>
+        <IoIosArrowRoundBack style={{ fontSize: '1.5rem' }} />
+          <h4>Back</h4>
         </div>
 
         <div style={{ display: "flex", flexDirection: 'column', gap: "1.3rem", justifyContent: 'center' }}>
@@ -200,13 +195,16 @@ const AdminLogin = () => {
           <Box mt={2} textAlign="center">
             <Button
               variant="contained"
-              sx={{ backgroundColor: isLoading ? '#acadac' : buttonsBgColor, width: '70%', height: '50px' }}
-              disabled={isLoading}
+              sx={{ backgroundColor: loading ? '#acadac' : buttonsBgColor, width: '70%', height: '50px' }}
+              disabled={loading}
               onClick={adminLogin}
             >
-              {isLoading ? <CircularLoader size={10} /> : 'Login'}
+              {loading ? <CircularLoader size={10} /> : 'Login'}
             </Button>
           </Box>
+          <p style={{ color: '#fff', fontSize: '12px', textAlign: 'center'}}>
+           Don't have an account? <Link to="/admin/register" style={{ color: '#fff', textDecoration: 'underline' }}>Click here </Link>
+          </p>
         </div>
       </motion.div>
 
@@ -215,20 +213,9 @@ const AdminLogin = () => {
           onClose={() => setShowForgotPasswordModal(false)}
           isOpen={showForgotPasswordModal}
         >
-          <AdminForgotPassword />
+          <AdminForgotPassword onClose = {() => setShowForgotPasswordModal(false)}/>
         </BottomSheet>
       }
-
-      <ErrorMessages 
-        errorMessage={errorMessage}
-        visible={errorVisible}
-        onClose={() => setErrorVisible(false)}
-      />
-      <SuccessMessages 
-        successMessage={successMessage}
-        visible={successVisible}
-        onClose={() => setSuccessVisible(false)}
-      />
     </div>
   );
 };

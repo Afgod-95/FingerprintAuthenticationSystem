@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { buttonsBgColor } from '../constants/Colors';
 import { useMediaQuery } from 'react-responsive';
 import { MdAdminPanelSettings } from "react-icons/md";
 import { PiStudentFill } from "react-icons/pi";
+import axios from 'axios'
 
 
 
@@ -12,30 +13,17 @@ const OnLoadPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = () => {
-        setIsLoading(true);
-        setTimeout(() => {
-        setIsLoading(false)
-        }, 2000);
-    };
-
     const isMobile = useMediaQuery({ query: '(max-width: 767px)' });
     const isTablet = useMediaQuery({ query: '(min-width: 768px) and (max-width: 1023px)' });
     const isDesktop = useMediaQuery({ query: '(min-width: 1024px)' });
 
-    const user = {
-        profileImage: 'https://png.pngtree.com/thumb_back/fh260/background/20230612/pngtree-man-wearing-glasses-is-wearing-colorful-background-image_2905240.jpg',
-        username: 'Godwin',
-        email: 'afgod98@gmail.com',
-    }
-    
 
     const adminLogin = () => {
-        navigate('/admin-login');
+        navigate('/admin/login');
     }
 
     const studentLogin = () => {
-        navigate('/student-login')
+        navigate('/student/login')
     }
     
 

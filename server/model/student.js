@@ -1,10 +1,9 @@
 const mongoose = require('mongoose')
-const studentSchema = new mongoose.Schema({
+const attendanceModel = new mongoose.Schema({
     image: {
         name: {
             type: String, 
             required: true, 
-            unique: true
         },
         data: {
             type: Buffer, 
@@ -30,12 +29,10 @@ const studentSchema = new mongoose.Schema({
     studentID: {
         type: String,
         required: true,
-        unique: true
     },
     email: {
         type: String,
         required: true,
-        unique: true
     },
     password: {
         type: String,
@@ -80,19 +77,21 @@ const studentSchema = new mongoose.Schema({
     },
     seatNumber: {
         type: String, 
-        unique: true
     },
-    token: String,
+    role: {
+        type: String,
+        enum: ['student', 'admin'],
+        default: 'student'
+    },
+
     createdAt: {
         type: Date,
         default: Date.now
     },
 })
 
-studentSchema.index({ studentID: 1 });
-studentSchema.index({ email: 1 });
 
 
 
-const studentModel = mongoose.model('studentData', studentSchema)
+const studentModel = mongoose.model('studentData', attendanceModel)
 module.exports = studentModel

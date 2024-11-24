@@ -10,7 +10,8 @@ body {
   width: 100%;
   height: 100%;
   background: #1C213E;
-  font-family: Arial, sans-serif;
+  font-family: sans-serif;
+  color: aliceblue;
 }
 
 h3{
@@ -22,6 +23,7 @@ h3{
 p{ 
   font-size: 14px;
   text-align: start;
+  color: #acadac;
 }
 /* ..............HOME.............. */
 ::-webkit-scrollbar{
@@ -36,3 +38,31 @@ p{
   justify-content: center;
   align-items: center;
 }
+
+
+.tab-item{
+  position: relative;
+  color: #c0c0c0;
+  cursor: pointer;
+  padding-top: 20px;
+  align-self: center;
+  padding-bottom: 15px;
+}
+
+.active-tab{
+  color: #fff;
+}
+
+.active-tab::before{
+  content: "";
+  background: #03fc56;
+  position: absolute;
+  display: block;
+  bottom: 0;
+  width: 100%;
+  height: 5px;
+  border-top-right-radius: 10px;
+  border-top-left-radius: 10px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
